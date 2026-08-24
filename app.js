@@ -3,19 +3,59 @@ const $ = id => document.getElementById(id);
 const STORAGE = {
   rooms: 'pinhigh_rooms_v3',
   people: 'pinhigh_people_v5',
-  database: 'pinhigh_participant_database_v5'
+  database: 'pinhigh_participant_database_v5',
+  event: 'pinhigh_event_info_v1'
 };
 
 let participantDB = normalizePeople(readJSON(STORAGE.database));
 let rooms = normalizeRooms(readJSON(STORAGE.rooms));
 let people = normalizePeople(readJSON(STORAGE.people));
 let selectedHandicap = null;
+let eventInfo = readEventInfo();
+let lastDrawResult = null; // { groups: [{room, people}], mode: 'random' | 'handicap' }
 
 function readJSON(key, fallback = []) {
   try {
     const value = JSON.parse(localStorage.getItem(key) || 'null');
     return Array.isArray(value) ? value : fallback;
   } catch { return fallback; }
+}
+
+function readEventInfo() {
+  try {
+    const v = JSON.parse(localStorage.getItem(STORAGE.event) || 'null');
+    if (v && typeof v === 'object') {
+      return { date: String(v.date || ''), place: String(v.place || '') };
+    }
+  } catch {}
+  return { date: '', place: '' };
+}
+
+function saveEventInfo() {
+  localStorage.setItem(STORAGE.event, JSON.stringify(eventInfo));
+}
+
+function formatEventDate(dateStr) {
+  if (!dateStr) return '날짜 미정';
+  const d = new Date(dateStr + 'T00:00:00');
+  if (Number.isNaN(d.getTime())) return dateStr;
+  const days = ['일', '월', '화', '수', '목', '금', '토'];
+  return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 (${days[d.getDay()]})`;
+}
+
+function loadEventInfoUI() {
+  $('eventDateInput').value = eventInfo.date;
+  $('eventPlaceInput').value = eventInfo.place;
+  updateEventCurrentLabel();
+}
+
+function updateEventCurrentLabel() {
+  const label = $('eventCurrentLabel');
+  if (!eventInfo.date && !eventInfo.place) {
+    label.textContent = '날짜와 장소를 입력해주세요.';
+    return;
+  }
+  label.textContent = `현재 설정: ${formatEventDate(eventInfo.date)} · ${eventInfo.place || '장소 미정'}`;
 }
 
 function normalizePeople(list) {
@@ -473,6 +513,13 @@ function draw() {
     $('progressLabel').textContent = `${people.length}명 · ${totalRooms}개 방`;
     resetButtons();
     isBusy = false;
+
+    lastDrawResult = {
+      groups: groups.map(g => ({ room: g.room, people: g.people })),
+      mode: 'random'
+    };
+    $('makeCardBtn').disabled = false;
+
     $('result').scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
@@ -644,8 +691,144 @@ function drawHandicap() {
     renderHandicapResult(groups);
     resetButtons();
     isBusy = false;
+
+    lastDrawResult = {
+      groups: groups.map(g => ({ room: g.room, people: g.people })),
+      mode: 'handicap'
+    };
+    $('makeCardBtn').disabled = false;
+
     $('result').scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, 1200);
+}
+
+// =========================================================
+// 방배정 결과 카드(공유용) 생성
+// =========================================================
+
+function modeLabel(mode) {
+  return mode === 'handicap' ? '핸디 균형 배정' : '랜덤 배정';
+}
+
+function buildTarotCardMarkup() {
+  if (!lastDrawResult) return '';
+  const sortedGroups = [...lastDrawResult.groups].sort((a, b) => compareRooms(a.room, b.room));
+  const totalPeople = sortedGroups.reduce((s, g) => s + g.people.length, 0);
+
+  return `
+    <div class="tarot-stars"></div>
+    <div class="tarot-inner-border"></div>
+    <div class="tarot-content">
+      <div class="tarot-compass"><div class="tarot-compass-ring"><span class="tarot-compass-star">✦</span></div></div>
+      <div class="tarot-meta">
+        <span class="tarot-meta-item">${esc(formatEventDate(eventInfo.date))}</span>
+        <span class="tarot-meta-dot">·</span>
+        <span class="tarot-meta-item">${esc(eventInfo.place || '장소 미정')}</span>
+      </div>
+      <h1 class="tarot-title">TEAM <em>PINHIGH</em></h1>
+      <div class="tarot-subtitle">GOLF CLUB &nbsp;·&nbsp; ${esc(modeLabel(lastDrawResult.mode))}</div>
+      <div class="tarot-divider"><span>◆</span></div>
+      <p class="tarot-tagline">좋은사람, 좋은 샷, 좋은 하루</p>
+
+      <div class="tarot-rooms">
+        ${sortedGroups.map(g => `
+          <div class="tarot-room">
+            <div class="tarot-room-head">
+              <span>🏌️ ${esc(g.room.name)}번 방</span>
+              ${g.room.left ? '<span class="tarot-left-badge">좌타방</span>' : ''}
+            </div>
+            <div class="tarot-room-people">
+              ${g.people.map(p => `
+                <span class="tarot-person${p.left ? ' left' : ''}">${esc(p.name)}${p.left ? ' <i>좌타</i>' : ''} <b>H${p.handicap}</b></span>
+              `).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="tarot-footer">
+        <div class="tarot-sun"></div>
+        <div class="tarot-footer-text">TEAM PINHIGH GOLF CLUB · ${totalPeople}명 · ${sortedGroups.length}개 방</div>
+      </div>
+    </div>
+  `;
+}
+
+function openShareCardDialog() {
+  if (!lastDrawResult) {
+    alertUser('먼저 방배정을 진행해주세요.');
+    return;
+  }
+  $('tarotCard').innerHTML = buildTarotCardMarkup();
+  $('shareCardDialog').showModal();
+}
+
+async function captureTarotCard() {
+  if (typeof html2canvas === 'undefined') {
+    alertUser('이미지 생성 라이브러리를 불러오지 못했습니다.\n인터넷 연결을 확인한 뒤 다시 시도해주세요.');
+    return null;
+  }
+  if (document.fonts && document.fonts.ready) {
+    try { await document.fonts.ready; } catch {}
+  }
+  const target = $('tarotCard');
+  return html2canvas(target, {
+    scale: 2,
+    backgroundColor: null,
+    useCORS: true
+  });
+}
+
+function tarotFileName() {
+  const dateLabel = eventInfo.date || 'result';
+  return `핀하이_방배정_${dateLabel}.png`;
+}
+
+async function withCardBusy(btnId, label, fn) {
+  const btn = $(btnId);
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.textContent = label;
+  try {
+    await fn();
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = original;
+  }
+}
+
+async function downloadTarotCard() {
+  const canvas = await captureTarotCard();
+  if (!canvas) return;
+  const link = document.createElement('a');
+  link.download = tarotFileName();
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+async function shareTarotCard() {
+  const canvas = await captureTarotCard();
+  if (!canvas) return;
+
+  canvas.toBlob(async blob => {
+    if (!blob) return;
+    const file = new File([blob], tarotFileName(), { type: 'image/png' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: 'TEAM PINHIGH 방배정 결과' });
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') return;
+      }
+    }
+
+    const link = document.createElement('a');
+    link.download = tarotFileName();
+    link.href = URL.createObjectURL(blob);
+    link.click();
+    toast('공유 기능을 지원하지 않는 환경이라 이미지로 저장했습니다.');
+  }, 'image/png');
 }
 
 // =========================================================
@@ -657,13 +840,11 @@ let importSeq = 0;
 let lastRawOcrText = '';
 
 // 영역 크롭 관련 상태
-let cropOriginalImage = null; // 원본 이미지(HTMLImageElement, natural 크기 기준)
-let cropSelection = null;     // 원본 이미지 픽셀 좌표 기준 선택 영역 {x, y, w, h}
-let cropDragStart = null;     // 드래그 시작 지점(크롭 프레임 기준 좌표)
+let cropOriginalImage = null;
+let cropSelection = null;
+let cropDragStart = null;
 
 function normalizeDashChars(text) {
-  // OCR이 마이너스 기호를 다양한 대시류 문자(en dash, em dash, minus sign 등)로
-  // 잘못 인식하는 경우가 있어, 모두 표준 하이픈(-)으로 통일시킨다.
   return String(text || '').replace(/[–—−‐‑]/g, '-');
 }
 
@@ -682,9 +863,6 @@ function parseOcrTextToCandidates(rawText) {
     const left = /좌타/.test(line);
 
     let handicap = null;
-    // "G" 또는 "g" 뒤에 숫자·하이픈이 아닌 문자가 최대 4개까지 끼어 있어도,
-    // 그 다음에 오는 숫자(부호·소수점 포함)를 그대로 핸디 값으로 인식한다.
-    // 예) G-3 -> -3 / G: -3 -> -3 / G(3) -> 3 / G9.4 -> 9.4
     const hMatch = line.match(/g[^0-9-]{0,4}(-?\d+(?:\.\d+)?)/i);
     if (hMatch) {
       const n = Number(hMatch[1]);
@@ -800,7 +978,6 @@ function setOcrLoading(visible, percent) {
   }
 }
 
-// ---- 파일 → dataURL / Image 엘리먼트 로딩 헬퍼 ----
 function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -819,7 +996,6 @@ function loadImageElement(dataUrl) {
   });
 }
 
-// ---- Otsu 이진화 임계값 계산 ----
 function computeOtsuThreshold(histogram, totalPixels) {
   let sum = 0;
   for (let i = 0; i < 256; i++) sum += i * histogram[i];
@@ -844,8 +1020,6 @@ function computeOtsuThreshold(histogram, totalPixels) {
   return threshold;
 }
 
-// ---- OCR 인식률 향상을 위한 이미지 전처리 ----
-// 1) 업스케일  2) 그레이스케일  3) 언샵 마스크(경계 강화)  4) 대비 보정  5) Otsu 이진화
 async function preprocessImageForOcr(sourceCanvas) {
   const srcWidth = sourceCanvas.width;
   const srcHeight = sourceCanvas.height;
@@ -853,7 +1027,6 @@ async function preprocessImageForOcr(sourceCanvas) {
   const targetWidth = Math.max(srcWidth, 1600);
   let scale = targetWidth / srcWidth;
 
-  // 아주 작은 영역을 과도하게 확대할 때 계산량이 폭발적으로 늘어나는 것을 방지
   const maxPixels = 6000000;
   if (srcWidth * srcHeight * scale * scale > maxPixels) {
     scale = Math.sqrt(maxPixels / (srcWidth * srcHeight));
@@ -874,13 +1047,11 @@ async function preprocessImageForOcr(sourceCanvas) {
   const w = canvas.width, h = canvas.height;
   const pixelCount = w * h;
 
-  // 1) 그레이스케일
   const gray = new Float32Array(pixelCount);
   for (let i = 0, p = 0; i < data.length; i += 4, p++) {
     gray[p] = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
   }
 
-  // 2) 언샵 마스크: 3x3 박스 블러와의 차이를 더해 글자 경계를 뚜렷하게 함
   const blurred = new Float32Array(pixelCount);
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
@@ -906,14 +1077,12 @@ async function preprocessImageForOcr(sourceCanvas) {
     sharpened[p] = Math.max(0, Math.min(255, v));
   }
 
-  // 3) 대비 보정
   const contrast = 1.25;
   const intercept = 128 * (1 - contrast);
   for (let p = 0; p < pixelCount; p++) {
     sharpened[p] = Math.max(0, Math.min(255, sharpened[p] * contrast + intercept));
   }
 
-  // 4) Otsu 이진화: 최적 임계값을 자동 계산해 흑/백 두 값으로 변환
   const histogram = new Array(256).fill(0);
   for (let p = 0; p < pixelCount; p++) {
     histogram[Math.round(sharpened[p])]++;
@@ -929,7 +1098,6 @@ async function preprocessImageForOcr(sourceCanvas) {
   return canvas.toDataURL('image/png');
 }
 
-// ---- Tesseract 인식 실행: PSM 4(단일 열 텍스트 목록) + 공백 보존 ----
 async function recognizeWithTesseract(imageSource, onProgress) {
   const { data } = await Tesseract.recognize(imageSource, 'kor+eng', {
     tessedit_pageseg_mode: '4',
@@ -943,7 +1111,6 @@ async function recognizeWithTesseract(imageSource, onProgress) {
   return data.text || '';
 }
 
-// ---- 크롭 다이얼로그: 이미지 선택 시 시작 ----
 async function openCropDialogWithFile(file) {
   try {
     const dataUrl = await fileToDataUrl(file);
@@ -1037,7 +1204,6 @@ function closeCropDialog() {
   clearCropSelection();
 }
 
-// ---- 크롭(또는 전체 이미지) 확정 → 전처리 → OCR 실행 ----
 async function runOcrPipeline() {
   if (!cropOriginalImage) return;
   if (typeof Tesseract === 'undefined') {
@@ -1123,6 +1289,25 @@ function confirmImport() {
 // 이벤트 바인딩
 // =========================================================
 
+$('eventDateInput').addEventListener('change', () => {
+  eventInfo.date = $('eventDateInput').value;
+  saveEventInfo();
+  updateEventCurrentLabel();
+});
+$('eventPlaceInput').addEventListener('input', () => {
+  eventInfo.place = $('eventPlaceInput').value;
+  saveEventInfo();
+  updateEventCurrentLabel();
+});
+$('setTodayBtn').addEventListener('click', () => {
+  const today = new Date();
+  const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  $('eventDateInput').value = iso;
+  eventInfo.date = iso;
+  saveEventInfo();
+  updateEventCurrentLabel();
+});
+
 $('addRoomBtn').addEventListener('click', addRoom);
 $('addPersonBtn').addEventListener('click', addPersonFromInput);
 $('drawRandomBtn').addEventListener('click', draw);
@@ -1175,6 +1360,11 @@ $('importSelectAll').addEventListener('change', e => {
 $('viewRawTextBtn').addEventListener('click', showRawTextViewer);
 $('closeRawTextDialog').addEventListener('click', () => $('rawTextDialog').close());
 
+$('makeCardBtn').addEventListener('click', openShareCardDialog);
+$('closeShareCardDialog').addEventListener('click', () => $('shareCardDialog').close());
+$('downloadCardBtn').addEventListener('click', () => withCardBusy('downloadCardBtn', '생성 중...', downloadTarotCard));
+$('shareCardBtn').addEventListener('click', () => withCardBusy('shareCardBtn', '생성 중...', shareTarotCard));
+
 $('helpBtn').addEventListener('click', () => $('helpDialog').showModal());
 $('closeHelp').addEventListener('click', () => $('helpDialog').close());
 $('clearDatabaseBtn').addEventListener('click', () => {
@@ -1185,17 +1375,20 @@ $('clearDatabaseBtn').addEventListener('click', () => {
   render();
 });
 $('resetBtn').addEventListener('click', () => {
-  if (!window.confirm('현재 모임의 방과 참석자를 초기화할까요?\n참가자 DB는 유지됩니다.')) return;
+  if (!window.confirm('현재 모임의 방과 참석자를 초기화할까요?\n참가자 DB와 모임 정보는 유지됩니다.')) return;
   rooms = [];
   people = [];
   saveCurrent();
   $('result').innerHTML = '';
+  lastDrawResult = null;
+  $('makeCardBtn').disabled = true;
   render();
-  toast('현재 모임을 초기화했습니다. 참가자 DB는 유지됩니다.');
+  toast('현재 모임을 초기화했습니다. 참가자 DB와 모임 정보는 유지됩니다.');
 });
 
 drawRandomBtnHTML = $('drawRandomBtn').innerHTML;
 drawHandicapBtnHTML = $('drawHandicapBtn').innerHTML;
 
 buildHandicapGrid();
+loadEventInfoUI();
 render();
