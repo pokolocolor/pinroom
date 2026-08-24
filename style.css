@@ -884,6 +884,66 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
 }
 .make-card-btn:disabled { opacity: 0.4; cursor: default; }
 
+
+
+/* =========================================================
+   16-1. 최근 장소 칩 (참가자 DB처럼 저장되는 장소 목록)
+   ========================================================= */
+.place-db-row {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: -2px 0 10px;
+}
+.place-db-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.place-db-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.place-chip {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-card-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.place-chip.active {
+  border-color: var(--accent);
+}
+.place-chip-select {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 12px;
+  padding: 6px 4px 6px 12px;
+}
+.place-chip.active .place-chip-select {
+  color: var(--accent);
+  font-weight: 700;
+}
+.place-chip-remove {
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 13px;
+  padding: 6px 10px 6px 4px;
+}
+.place-chip-remove:hover {
+  color: var(--danger);
+}
+
+
+
+
+
+
 /* =========================================================
    17. 공유 카드 다이얼로그
    ========================================================= */
