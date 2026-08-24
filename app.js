@@ -4,12 +4,14 @@ const STORAGE = {
   rooms: 'pinhigh_rooms_v3',
   people: 'pinhigh_people_v5',
   database: 'pinhigh_participant_database_v5',
-  event: 'pinhigh_event_info_v1'
+  event: 'pinhigh_event_info_v1',
+  places: 'pinhigh_place_database_v1'
 };
 
 let participantDB = normalizePeople(readJSON(STORAGE.database));
 let rooms = normalizeRooms(readJSON(STORAGE.rooms));
 let people = normalizePeople(readJSON(STORAGE.people));
+let placeDB = normalizePlaces(readJSON(STORAGE.places));
 let selectedHandicap = null;
 let eventInfo = readEventInfo();
 let lastDrawResult = null; // { groups: [{room, people}], mode: 'random' | 'handicap' }
@@ -47,6 +49,7 @@ function loadEventInfoUI() {
   $('eventDateInput').value = eventInfo.date;
   $('eventPlaceInput').value = eventInfo.place;
   updateEventCurrentLabel();
+  renderPlaceDB();
 }
 
 function updateEventCurrentLabel() {
@@ -56,6 +59,75 @@ function updateEventCurrentLabel() {
     return;
   }
   label.textContent = `현재 설정: ${formatEventDate(eventInfo.date)} · ${eventInfo.place || '장소 미정'}`;
+}
+
+// =========================================================
+// 장소 데이터베이스 (참가자 DB와 동일한 방식으로 로컬 저장)
+// =========================================================
+
+function normalizePlaces(list) {
+  const seen = new Set();
+  const result = [];
+  (Array.isArray(list) ? list : []).forEach(p => {
+    const name = String(p || '').trim();
+    if (name && !seen.has(name)) {
+      seen.add(name);
+      result.push(name);
+    }
+  });
+  return result.slice(0, 20);
+}
+
+function savePlaceDB() {
+  placeDB = normalizePlaces(placeDB);
+  localStorage.setItem(STORAGE.places, JSON.stringify(placeDB));
+}
+
+function rememberPlace(name) {
+  const trimmed = String(name || '').trim();
+  if (!trimmed) return;
+  placeDB = normalizePlaces([trimmed, ...placeDB.filter(p => p !== trimmed)]);
+  savePlaceDB();
+  renderPlaceDB();
+}
+
+function removePlaceFromDB(index) {
+  const p = placeDB[index];
+  if (!p) return;
+  if (!window.confirm(`"${p}" 장소를 목록에서 삭제할까요?`)) return;
+  placeDB.splice(index, 1);
+  savePlaceDB();
+  renderPlaceDB();
+}
+
+function selectPlace(index) {
+  const p = placeDB[index];
+  if (!p) return;
+  $('eventPlaceInput').value = p;
+  eventInfo.place = p;
+  saveEventInfo();
+  updateEventCurrentLabel();
+  rememberPlace(p);
+}
+
+function renderPlaceDB() {
+  const row = $('placeDbRow');
+  const wrap = $('placeDbChips');
+  if (!row || !wrap) return;
+
+  if (!placeDB.length) {
+    wrap.innerHTML = '';
+    row.style.display = 'none';
+    return;
+  }
+
+  row.style.display = 'flex';
+  wrap.innerHTML = placeDB.map((p, i) => `
+    <span class="place-chip${eventInfo.place === p ? ' active' : ''}">
+      <button type="button" class="place-chip-select" onclick="selectPlace(${i})">${esc(p)}</button>
+      <button type="button" class="place-chip-remove" onclick="removePlaceFromDB(${i})" aria-label="${esc(p)} 삭제">×</button>
+    </span>
+  `).join('');
 }
 
 function normalizePeople(list) {
@@ -326,7 +398,7 @@ function leftRoomWarningHTML() {
 
 function getGroupSizes(roomCount, personCount) {
   const min = roomCount * 2;
-  const extra = personCount - min;
+  const extra = Math.max(0, personCount - min);
   const sizes = Array(roomCount).fill(2);
   shuffle(Array.from({ length: roomCount }, (_, i) => i)).slice(0, extra).forEach(i => { sizes[i] = 3; });
   return sizes;
@@ -351,7 +423,7 @@ function buildAssignments() {
   const remaining = shuffle([...rightPeople, ...leftPeople.slice(li)]);
   let cursor = 0;
   groups.forEach(group => {
-    while (group.people.length < group.capacity) {
+    while (group.people.length < group.capacity && cursor < remaining.length) {
       group.people.push(remaining[cursor++]);
     }
   });
@@ -406,16 +478,31 @@ function resetButtons() {
   h.innerHTML = drawHandicapBtnHTML;
 }
 
+function recoverFromDrawError(err) {
+  console.error('방배정 진행 중 오류:', err);
+  resetButtons();
+  isBusy = false;
+  refreshMakeCardButton();
+  alertUser('방배정을 진행하는 중 오류가 발생했습니다.\n다시 시도해주세요. 문제가 계속되면 페이지를 새로고침해주세요.');
+}
+
 function draw() {
   if (isBusy) return;
   if (!validateForDraw()) return;
 
-  const groups = buildAssignments();
-  if (!groups.every(g => g.people.length >= 2 && g.people.length <= 3)) {
-    alertUser('방배정 조건을 만족하는 결과를 만들지 못했습니다. 다시 시도해주세요.');
+  let groups;
+  try {
+    groups = buildAssignments();
+    if (!groups.every(g => g.people.length >= 2 && g.people.length <= 3)) {
+      alertUser('방배정 조건을 만족하는 결과를 만들지 못했습니다. 다시 시도해주세요.');
+      return;
+    }
+    groups.sort((a, b) => compareRooms(a.room, b.room));
+  } catch (err) {
+    console.error(err);
+    alertUser('방배정 계산 중 오류가 발생했습니다. 다시 시도해주세요.');
     return;
   }
-  groups.sort((a, b) => compareRooms(a.room, b.room));
 
   isBusy = true;
   setButtonsBusy('<span class="dice-spin">🎲</span> 방배정 중...', 'random');
@@ -457,70 +544,87 @@ function draw() {
   }
 
   function startRoom() {
-    if (roomIndex >= totalRooms) {
-      finishAll();
-      return;
-    }
-
-    const currentGroup = groups[roomIndex];
-    const pool = people.filter(p => !revealedNames.has(p.name));
-
-    $('currentRoomSlot').innerHTML = `
-      <div class="room-result shuffling-room">
-        <div class="room-result-title"><b>🏌️ ${esc(currentGroup.room.name)}번 방</b><span>배정 중...</span></div>
-        <div class="result-people" id="shuffleChips"></div>
-      </div>
-    `;
-    renderPending();
-
-    let elapsed = 0;
-    const chipsEl = $('shuffleChips');
-
-    function tick() {
-      const previewPeople = shuffle(pool).slice(0, currentGroup.people.length);
-      chipsEl.innerHTML = previewPeople.map(p => `<span class="person shuffle-chip">${esc(p.name)}</span>`).join('');
-      elapsed += shuffleInterval;
-      if (elapsed >= shuffleDurationPerRoom) {
-        clearInterval(timer);
-        finalizeRoom(currentGroup);
+    try {
+      if (roomIndex >= totalRooms) {
+        finishAll();
+        return;
       }
-    }
 
-    tick();
-    var timer = setInterval(tick, shuffleInterval);
+      const currentGroup = groups[roomIndex];
+      const pool = people.filter(p => !revealedNames.has(p.name));
+
+      $('currentRoomSlot').innerHTML = `
+        <div class="room-result shuffling-room">
+          <div class="room-result-title"><b>🏌️ ${esc(currentGroup.room.name)}번 방</b><span>배정 중...</span></div>
+          <div class="result-people" id="shuffleChips"></div>
+        </div>
+      `;
+      renderPending();
+
+      let elapsed = 0;
+      const chipsEl = $('shuffleChips');
+
+      function tick() {
+        try {
+          const previewPeople = shuffle(pool).slice(0, currentGroup.people.length);
+          chipsEl.innerHTML = previewPeople.map(p => `<span class="person shuffle-chip">${esc(p.name)}</span>`).join('');
+          elapsed += shuffleInterval;
+          if (elapsed >= shuffleDurationPerRoom) {
+            clearInterval(timer);
+            finalizeRoom(currentGroup);
+          }
+        } catch (err) {
+          clearInterval(timer);
+          recoverFromDrawError(err);
+        }
+      }
+
+      tick();
+      var timer = setInterval(tick, shuffleInterval);
+    } catch (err) {
+      recoverFromDrawError(err);
+    }
   }
 
   function finalizeRoom(currentGroup) {
-    currentGroup.people.forEach(p => revealedNames.add(p.name));
-    $('currentRoomSlot').innerHTML = '';
+    try {
+      currentGroup.people.forEach(p => revealedNames.add(p.name));
+      $('currentRoomSlot').innerHTML = '';
 
-    $('revealedList').insertAdjacentHTML('beforeend', `
-      <div class="room-result reveal-item-done">
-        <div class="room-result-title"><b>🏌️ ${esc(currentGroup.room.name)}번 방</b><span>${currentGroup.people.length}명${currentGroup.room.left ? ' · 좌타방' : ''}</span></div>
-        <div class="result-people">${currentGroup.people.map(p => `
-          <span class="person${p.left ? ' left' : ''}">${esc(p.name)}${leftTag(p.left)}</span>
-        `).join('')}</div>
-      </div>
-    `);
+      $('revealedList').insertAdjacentHTML('beforeend', `
+        <div class="room-result reveal-item-done">
+          <div class="room-result-title"><b>🏌️ ${esc(currentGroup.room.name)}번 방</b><span>${currentGroup.people.length}명${currentGroup.room.left ? ' · 좌타방' : ''}</span></div>
+          <div class="result-people">${currentGroup.people.map(p => `
+            <span class="person${p.left ? ' left' : ''}">${esc(p.name)}${leftTag(p.left)}</span>
+          `).join('')}</div>
+        </div>
+      `);
 
-    roomIndex++;
-    $('progressLabel').textContent = `${roomIndex}/${totalRooms}개 방 완료`;
-    setTimeout(startRoom, pauseBetweenRooms);
+      roomIndex++;
+      $('progressLabel').textContent = `${roomIndex}/${totalRooms}개 방 완료`;
+      setTimeout(startRoom, pauseBetweenRooms);
+    } catch (err) {
+      recoverFromDrawError(err);
+    }
   }
 
   function finishAll() {
-    $('result').querySelector('.result-head strong').textContent = '🎉 방배정 완료';
-    $('progressLabel').textContent = `${people.length}명 · ${totalRooms}개 방`;
-    resetButtons();
-    isBusy = false;
+    try {
+      $('result').querySelector('.result-head strong').textContent = '🎉 방배정 완료';
+      $('progressLabel').textContent = `${people.length}명 · ${totalRooms}개 방`;
+      resetButtons();
+      isBusy = false;
 
-    lastDrawResult = {
-      groups: groups.map(g => ({ room: g.room, people: g.people })),
-      mode: 'random'
-    };
-    $('makeCardBtn').disabled = false;
+      lastDrawResult = {
+        groups: groups.map(g => ({ room: g.room, people: g.people })),
+        mode: 'random'
+      };
+      refreshMakeCardButton();
 
-    $('result').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      $('result').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch (err) {
+      recoverFromDrawError(err);
+    }
   }
 
   startRoom();
@@ -681,30 +785,42 @@ function drawHandicap() {
   isBusy = true;
   setButtonsBusy('<span class="calc-spin">⚖️</span> 계산 중...', 'handicap');
 
-  const entries = people.map(p => ({ name: p.name, handicap: p.handicap, left: p.left }));
-  const groups = assignByHandicap(entries, rooms);
+  try {
+    const entries = people.map(p => ({ name: p.name, handicap: p.handicap, left: p.left }));
+    const groups = assignByHandicap(entries, rooms);
 
-  renderHandicapLoading();
-  $('result').scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-  setTimeout(() => {
-    renderHandicapResult(groups);
-    resetButtons();
-    isBusy = false;
-
-    lastDrawResult = {
-      groups: groups.map(g => ({ room: g.room, people: g.people })),
-      mode: 'handicap'
-    };
-    $('makeCardBtn').disabled = false;
-
+    renderHandicapLoading();
     $('result').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, 1200);
+
+    setTimeout(() => {
+      try {
+        renderHandicapResult(groups);
+        lastDrawResult = {
+          groups: groups.map(g => ({ room: g.room, people: g.people })),
+          mode: 'handicap'
+        };
+        refreshMakeCardButton();
+        $('result').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } catch (err) {
+        recoverFromDrawError(err);
+        return;
+      }
+      resetButtons();
+      isBusy = false;
+    }, 1200);
+  } catch (err) {
+    recoverFromDrawError(err);
+  }
 }
 
 // =========================================================
 // 방배정 결과 카드(공유용) 생성
 // =========================================================
+
+function refreshMakeCardButton() {
+  const btn = $('makeCardBtn');
+  if (btn) btn.disabled = !lastDrawResult;
+}
 
 function modeLabel(mode) {
   return mode === 'handicap' ? '핸디 균형 배정' : '랜덤 배정';
@@ -755,12 +871,22 @@ function buildTarotCardMarkup() {
 }
 
 function openShareCardDialog() {
-  if (!lastDrawResult) {
-    alertUser('먼저 방배정을 진행해주세요.');
-    return;
+  try {
+    if (!lastDrawResult) {
+      alertUser('먼저 방배정을 진행해주세요.');
+      return;
+    }
+    const dialog = $('shareCardDialog');
+    if (!dialog || typeof dialog.showModal !== 'function') {
+      alertUser('현재 브라우저에서는 카드 보기 기능을 지원하지 않습니다. 최신 브라우저(크롬, 사파리 등)로 다시 시도해주세요.');
+      return;
+    }
+    $('tarotCard').innerHTML = buildTarotCardMarkup();
+    dialog.showModal();
+  } catch (err) {
+    console.error('카드 생성 중 오류:', err);
+    alertUser('카드를 만드는 중 오류가 발생했습니다.\n페이지를 새로고침한 뒤 다시 시도해주세요.');
   }
-  $('tarotCard').innerHTML = buildTarotCardMarkup();
-  $('shareCardDialog').showModal();
 }
 
 async function captureTarotCard() {
@@ -791,6 +917,9 @@ async function withCardBusy(btnId, label, fn) {
   btn.textContent = label;
   try {
     await fn();
+  } catch (err) {
+    console.error(err);
+    alertUser('이미지를 만드는 중 오류가 발생했습니다. 다시 시도해주세요.');
   } finally {
     btn.disabled = false;
     btn.innerHTML = original;
@@ -1294,11 +1423,23 @@ $('eventDateInput').addEventListener('change', () => {
   saveEventInfo();
   updateEventCurrentLabel();
 });
+
 $('eventPlaceInput').addEventListener('input', () => {
   eventInfo.place = $('eventPlaceInput').value;
   saveEventInfo();
   updateEventCurrentLabel();
 });
+$('eventPlaceInput').addEventListener('change', () => {
+  rememberPlace($('eventPlaceInput').value);
+});
+$('eventPlaceInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    rememberPlace($('eventPlaceInput').value);
+    $('eventPlaceInput').blur();
+  }
+});
+
 $('setTodayBtn').addEventListener('click', () => {
   const today = new Date();
   const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -1375,15 +1516,15 @@ $('clearDatabaseBtn').addEventListener('click', () => {
   render();
 });
 $('resetBtn').addEventListener('click', () => {
-  if (!window.confirm('현재 모임의 방과 참석자를 초기화할까요?\n참가자 DB와 모임 정보는 유지됩니다.')) return;
+  if (!window.confirm('현재 모임의 방과 참석자를 초기화할까요?\n참가자 DB, 장소 목록, 모임 정보는 유지됩니다.')) return;
   rooms = [];
   people = [];
   saveCurrent();
   $('result').innerHTML = '';
   lastDrawResult = null;
-  $('makeCardBtn').disabled = true;
+  refreshMakeCardButton();
   render();
-  toast('현재 모임을 초기화했습니다. 참가자 DB와 모임 정보는 유지됩니다.');
+  toast('현재 모임을 초기화했습니다. 참가자 DB, 장소 목록, 모임 정보는 유지됩니다.');
 });
 
 drawRandomBtnHTML = $('drawRandomBtn').innerHTML;
@@ -1392,3 +1533,4 @@ drawHandicapBtnHTML = $('drawHandicapBtn').innerHTML;
 buildHandicapGrid();
 loadEventInfoUI();
 render();
+refreshMakeCardButton();
