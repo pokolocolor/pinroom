@@ -13,7 +13,7 @@
   <link rel="apple-touch-icon-precomposed" sizes="180x180" href="apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
   <title>핀하이 정모 방뽑기</title>
-  <link rel="stylesheet" href="style.css?v=22">
+  <link rel="stylesheet" href="style.css?v=23">
 </head>
 <body>
 
@@ -110,7 +110,7 @@
         <li><b>캡처 이미지로 일괄 등록(베타)</b> 버튼을 누르면 먼저 인식할 영역을 드래그로 선택하는 화면이 나타납니다. 이름·핸디가 나열된 부분만 선택하면 인식률이 높아지며, 선택하지 않고 바로 진행해도 이미지 전체로 인식합니다. 인식이 끝나면 확인·수정 화면이 열려 여러 명을 한 번에 등록할 수 있고, <b>🔍 인식된 원문 전체보기</b>로 잘리지 않은 전체 원문을 확인·복사할 수 있습니다.</li>
         <li>처음 등록한 참석자는 이름·핸디 정보가 참가자 DB에 저장되어 다음 모임에서도 목록에서 바로 선택할 수 있습니다.</li>
         <li>방배정은 <b>🎲 랜덤 방배정</b>과 <b>⚖️ 핸디 균형 배정</b> 중 원하는 버튼을 눌러 진행할 수 있습니다. 좌타 참석자는 좌타방에 우선 배정됩니다.</li>
-        <li>방배정이 완료되면 <b>🎴 배정 결과 카드 만들기</b> 버튼이 활성화됩니다. 눌러서 나오는 카드 팝업에서 <b>이미지 저장</b> 또는 <b>공유하기</b> 버튼으로 카카오톡 등에 바로 공유할 수 있는 이미지를 만들 수 있습니다. 만약 방배정 도중 오류가 발생하면 알림창으로 원인이 표시되고 버튼은 다시 눌러쓸 수 있는 상태로 자동 복구됩니다.</li>
+        <li>방배정이 완료되면 <b>🎴 배정 결과 카드 만들기</b> 버튼이 활성화됩니다. 카드 팝업의 <b>📥 사진첩에 저장</b> 버튼을 누르면 대부분의 기기에서 바로 사진첩(갤러리)에 저장할 수 있는 공유창이 뜨며, 지원하지 않는 기기에서는 이미지를 길게 눌러 저장하는 화면으로 안내됩니다. <b>📤 다른 앱으로 공유</b> 버튼으로는 카카오톡 등에 바로 전송할 수 있습니다. 방배정 도중 오류가 발생하면 알림창으로 원인이 표시되고 버튼은 다시 눌러쓸 수 있는 상태로 자동 복구됩니다.</li>
         <li>좌타 참석자가 있는데 좌타방이 등록되어 있지 않으면, 두 배정 방식 모두 결과 화면 상단에 안내 문구가 표시됩니다.</li>
         <li>방 목록과 배정 결과 모두 <b>방 번호 오름차순</b>으로 표시됩니다.</li>
       </ol>
@@ -190,10 +190,18 @@
         <div class="tarot-card" id="tarotCard"></div>
       </div>
       <div class="share-card-actions">
-        <button type="button" class="share-download-btn" id="downloadCardBtn">⬇️ 이미지 저장</button>
-        <button type="button" class="share-share-btn" id="shareCardBtn">📤 공유하기</button>
+        <button type="button" class="share-download-btn" id="saveCardBtn">📥 사진첩에 저장</button>
+        <button type="button" class="share-share-btn" id="shareCardBtn">📤 다른 앱으로 공유</button>
       </div>
-      <p class="share-card-hint">카드가 화면보다 크면 좌우로 스크롤해서 확인할 수 있으며, 저장/공유 시에는 카드 전체가 이미지로 만들어집니다.</p>
+      <p class="share-card-hint">기기에 따라 공유창이 뜨면 <b>"이미지 저장"</b> 또는 <b>"사진에 추가"</b>를 선택해주세요. 지원하지 않는 기기에서는 이미지가 크게 표시되며, 그 이미지를 <b>길게 눌러</b> 저장할 수 있습니다.</p>
+    </div>
+  </dialog>
+
+  <dialog id="imageSaveOverlay">
+    <div class="image-save-inner">
+      <button class="close" id="closeImageSaveOverlay" aria-label="닫기">×</button>
+      <p class="image-save-guide">이미지를 <b>길게 눌러</b> "이미지 저장" 또는 "사진에 추가"를 선택하면 사진첩에 저장됩니다.</p>
+      <img id="imageSaveTarget" alt="배정 결과 카드">
     </div>
   </dialog>
 
@@ -201,6 +209,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="app.js?v=22"></script>
+  <script src="app.js?v=23"></script>
 </body>
 </html>
