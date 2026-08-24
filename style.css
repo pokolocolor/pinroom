@@ -1,0 +1,843 @@
+/* =========================================================
+   0. 초기화 및 변수
+   ========================================================= */
+* { box-sizing: border-box; }
+
+:root {
+  --bg: #18072d;
+  --bg-card: #221238;
+  --bg-card-2: #2b1a48;
+  --border: #3d2a5e;
+  --text: #f3eefc;
+  --text-dim: #ab9dd0;
+  --accent: #8b5cf6;
+  --accent-strong: #7c3aed;
+  --accent-soft: rgba(139, 92, 246, 0.2);
+  --pink: #ec4899;
+  --green: #10b981;
+  --danger: #f87171;
+  --warn: #fbbf24;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button { font-family: inherit; cursor: pointer; }
+input, textarea { font-family: inherit; }
+
+/* =========================================================
+   1. 상단 배너 / 히어로 영역
+   ========================================================= */
+.hero-banner { width: 100%; line-height: 0; }
+.hero-banner img { width: 100%; display: block; object-fit: cover; }
+
+.app-shell {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 18px 16px 90px;
+}
+
+.hero { margin-bottom: 18px; }
+
+.hero-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.hero-btn {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-dim);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.hero-btn:hover { border-color: var(--accent); color: var(--text); }
+
+.hero h2 {
+  margin: 6px 0 4px;
+  font-size: 22px;
+  font-weight: 800;
+}
+.hero h2 em {
+  font-style: normal;
+  background: linear-gradient(135deg, #c4b5fd, var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.hero p { margin: 0; font-size: 13px; color: var(--text-dim); }
+
+/* =========================================================
+   2. 카드 공통
+   ========================================================= */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.card-title strong { font-size: 15px; font-weight: 700; }
+.title-icon { font-size: 16px; }
+.count {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-dim);
+  background: var(--accent-soft);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+/* =========================================================
+   3. 입력 행 / 버튼 / 토글
+   ========================================================= */
+.input-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.input-row input[type="text"],
+.input-row input[type="tel"],
+.input-row input[type="number"] {
+  flex: 1;
+  min-width: 110px;
+  background: var(--bg-card-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 11px 12px;
+  font-size: 15px;
+}
+.input-row input:focus { outline: none; border-color: var(--accent); }
+
+.add-btn {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 11px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.attendee-input-row { flex-wrap: wrap; }
+
+.handicap-picker-btn {
+  background: var(--bg-card-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  font-size: 14px;
+  white-space: nowrap;
+  min-width: 64px;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+  cursor: pointer;
+  width: fit-content;
+}
+.toggle-row input { position: absolute; opacity: 0; width: 0; height: 0; }
+.switch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--bg-card-2);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.toggle-row input:checked + .switch { background: var(--accent-soft); border-color: var(--accent); }
+.toggle-row input:checked + .switch::after { transform: translateX(16px); background: var(--accent); }
+
+.ocr-import-row { margin-bottom: 12px; }
+.ocr-import-btn {
+  width: 100%;
+  background: var(--bg-card-2);
+  border: 1px dashed var(--border);
+  color: var(--text-dim);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.ocr-import-btn:hover { color: var(--text); border-color: var(--accent); }
+
+.empty, .db-empty {
+  color: var(--text-dim);
+  font-size: 13px;
+  padding: 8px 2px;
+  margin: 0 0 6px;
+}
+
+/* =========================================================
+   4. 칩(방/참석자 목록) - app.js가 동적으로 생성
+   ========================================================= */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 6px 6px 12px;
+  font-size: 13px;
+  color: var(--text);
+}
+.chip button {
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 15px;
+  line-height: 1;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.chip button:hover { background: rgba(248, 113, 113, 0.18); color: var(--danger); }
+
+.left-tag {
+  background: rgba(96, 165, 250, 0.18);
+  color: #93c5fd;
+  border-radius: 999px;
+  padding: 1px 7px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.handi-tag {
+  background: rgba(16, 185, 129, 0.16);
+  color: #6ee7b7;
+  border-radius: 999px;
+  padding: 1px 7px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* =========================================================
+   5. 참가자 데이터베이스
+   ========================================================= */
+.database-card .db-guide {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin: 0 0 12px;
+}
+
+.database-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.db-row { display: flex; align-items: center; gap: 8px; }
+
+.db-person-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  color: var(--text);
+  text-align: left;
+}
+.db-person-btn.selected { opacity: 0.5; cursor: default; }
+.db-name { font-size: 14px; font-weight: 600; }
+.db-action { margin-left: auto; font-size: 12px; color: var(--accent); font-weight: 600; }
+.db-person-btn.selected .db-action { color: var(--text-dim); }
+
+.db-delete {
+  border: 1px solid var(--border);
+  background: var(--bg-card-2);
+  color: var(--text-dim);
+  border-radius: var(--radius-sm);
+  width: 34px; height: 34px;
+  font-size: 15px;
+}
+.db-delete:hover { color: var(--danger); border-color: var(--danger); }
+
+.db-clear-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  font-size: 12px;
+}
+.db-clear-btn:hover { color: var(--danger); border-color: var(--danger); }
+
+/* =========================================================
+   6. 방배정 실행 버튼
+   ========================================================= */
+.draw-btn-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.draw-btn {
+  flex: 1;
+  border: none;
+  border-radius: var(--radius);
+  padding: 16px 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: var(--shadow);
+}
+.draw-btn-random { background: linear-gradient(135deg, #f472b6, var(--pink)); }
+.draw-btn-handicap { background: linear-gradient(135deg, #34d399, var(--green)); }
+.draw-btn:disabled, .draw-btn.drawing { opacity: 0.85; cursor: default; }
+
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.dice-spin, .calc-spin { display: inline-block; animation: spin 1.1s linear infinite; }
+
+.hint {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin: 0 0 18px;
+}
+
+footer {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-dim);
+  opacity: 0.7;
+  padding: 20px 0 4px;
+}
+
+/* =========================================================
+   7. 방배정 결과 영역
+   ========================================================= */
+.result-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+
+.result-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.result-head strong { font-size: 16px; }
+.result-head span { font-size: 12px; color: var(--text-dim); }
+
+.result-warning {
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: var(--warn);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+.assignment { display: flex; flex-direction: column; gap: 10px; }
+
+.room-result {
+  background: var(--bg-card-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+}
+.room-result-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.room-result-title b { color: var(--text); font-size: 14px; }
+
+.result-people { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.person {
+  background: var(--accent-soft);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.person.left { background: rgba(96, 165, 250, 0.16); }
+.handi-badge { color: var(--text-dim); font-size: 11px; }
+
+.pending-room { opacity: 0.45; }
+.shuffling-room .shuffle-chip { background: var(--bg-card); border: 1px dashed var(--border); }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.reveal-item-done { animation: fadeUp 0.35s ease both; }
+
+/* =========================================================
+   8. 핸디 균형 배정 결과
+   ========================================================= */
+.handicap-overview {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.overview-item {
+  flex: 1;
+  min-width: 100px;
+  background: var(--bg-card-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  text-align: center;
+}
+.overview-item span { display: block; font-size: 11px; color: var(--text-dim); margin-bottom: 4px; }
+.overview-item b { font-size: 15px; }
+
+.handicap-room { opacity: 0; }
+
+.handicap-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.stat-chip {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.stat-chip b { color: var(--text); }
+.stat-chip.dev-good { border-color: rgba(52, 211, 153, 0.4); color: #6ee7b7; }
+.stat-chip.dev-ok { border-color: rgba(251, 191, 36, 0.4); color: #fcd34d; }
+.stat-chip.dev-warn { border-color: rgba(248, 113, 113, 0.4); color: #fca5a5; }
+
+.balance-bar-track {
+  margin-top: 8px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--bg-card);
+  overflow: hidden;
+}
+.balance-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #34d399, var(--green));
+  transition: width 0.6s ease;
+}
+
+/* =========================================================
+   9. 다이얼로그 공통
+   ========================================================= */
+dialog {
+  border: none;
+  padding: 0;
+  background: transparent;
+  width: min(92vw, 440px);
+}
+dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
+
+.dialog-inner {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px 18px 18px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.dialog-inner h3 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 700;
+  padding-right: 30px;
+}
+
+.close {
+  position: absolute;
+  top: 14px; right: 14px;
+  border: none;
+  background: var(--bg-card-2);
+  color: var(--text-dim);
+  font-size: 16px;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+}
+.close:hover { background: var(--accent-soft); color: var(--text); }
+
+#helpDialog ol { padding-left: 20px; margin: 0 0 14px; font-size: 13px; line-height: 1.7; color: var(--text-dim); }
+#helpDialog ol li b { color: var(--text); }
+#helpDialog p { font-size: 12px; color: var(--text-dim); margin: 0; }
+
+/* =========================================================
+   10. 핸디 선택 다이얼로그
+   ========================================================= */
+.handicap-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+.handicap-grid-btn {
+  border: 1px solid var(--border);
+  background: var(--bg-card-2);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 8px 0;
+  font-size: 13px;
+}
+.handicap-grid-btn:hover { border-color: var(--accent); }
+.handicap-grid-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* =========================================================
+   11. 영역 크롭 다이얼로그 (신규)
+   ========================================================= */
+#cropDialog { width: min(96vw, 560px); }
+
+.crop-dialog-inner { max-height: 88vh; }
+
+.crop-guide {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin: 0 0 12px;
+}
+
+.crop-wrap {
+  width: 100%;
+  max-height: 62vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #000;
+  overflow: hidden;
+  margin-bottom: 12px;
+  touch-action: none;
+  -webkit-touch-callout: none;
+}
+
+.crop-frame {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  max-height: 62vh;
+  touch-action: none;
+}
+
+.crop-frame img {
+  display: block;
+  max-width: 100%;
+  max-height: 62vh;
+  width: auto;
+  height: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+}
+
+.crop-selection-box {
+  position: absolute;
+  display: none;
+  left: 0; top: 0;
+  border: 2px dashed var(--accent);
+  background: rgba(139, 92, 246, 0.18);
+  pointer-events: none;
+}
+
+.crop-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.crop-actions-right { display: flex; gap: 8px; }
+
+.crop-reset-btn {
+  background: var(--bg-card-2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 13px;
+}
+.crop-cancel-btn {
+  background: var(--bg-card-2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  font-size: 14px;
+}
+.crop-confirm-btn {
+  background: linear-gradient(135deg, #f472b6, var(--accent));
+  border: none;
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* =========================================================
+   12. OCR 로딩 다이얼로그
+   ========================================================= */
+.ocr-loading-inner { text-align: center; padding: 34px 18px; }
+.ocr-spinner {
+  width: 32px; height: 32px;
+  margin: 0 auto 14px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+#ocrLoadingText { font-size: 14px; margin: 0 0 6px; }
+.ocr-loading-sub { font-size: 11px; color: var(--text-dim); margin: 0; }
+
+/* =========================================================
+   13. 이미지 인식 결과 확인 다이얼로그
+   ========================================================= */
+.import-guide {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin: 0 0 10px;
+}
+
+.view-raw-btn {
+  width: 100%;
+  background: var(--bg-card-2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: var(--radius-sm);
+  padding: 9px;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+.view-raw-btn:hover { color: var(--text); border-color: var(--accent); }
+
+.import-select-all-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.import-select-all { display: flex; align-items: center; gap: 6px; }
+
+.import-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 4px; }
+
+.import-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+}
+.import-check { display: flex; align-items: center; }
+.import-fields {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+}
+.import-name-input {
+  flex: 1 1 100px;
+  min-width: 80px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 7px 8px;
+  font-size: 13px;
+}
+.import-handi-input {
+  flex: 0 0 66px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 7px 8px;
+  font-size: 13px;
+}
+.import-left-check {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+/* 원본 OCR 텍스트 줄: 반드시 카드 전체 폭을 차지하며 줄바꿈되어야 함 */
+.import-raw {
+  flex-basis: 100% !important;
+  width: 100%;
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  overflow: visible !important;
+  white-space: normal !important;
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+.import-empty { color: var(--text-dim); font-size: 13px; text-align: center; padding: 20px 0; }
+
+.import-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+.import-cancel-btn {
+  background: var(--bg-card-2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: var(--radius-sm);
+  padding: 10px 18px;
+  font-size: 14px;
+}
+.import-confirm-btn {
+  background: linear-gradient(135deg, #f472b6, var(--accent));
+  border: none;
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* =========================================================
+   14. 인식된 원문 전체보기 다이얼로그
+   ========================================================= */
+.raw-text-dialog-inner { width: 100%; }
+#rawTextArea {
+  width: 100%;
+  min-height: 220px;
+  background: var(--bg-card-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+}
+.raw-text-hint { font-size: 11px; color: var(--text-dim); margin: 8px 0 0; }
+
+/* =========================================================
+   15. 토스트
+   ========================================================= */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%) translateY(12px);
+  background: var(--bg-card-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 50;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* =========================================================
+   16. 반응형
+   ========================================================= */
+@media (max-width: 480px) {
+  .app-shell { padding: 14px 12px 80px; }
+  .handicap-grid { grid-template-columns: repeat(5, 1fr); }
+  .draw-btn-group { flex-direction: column; }
+  .handicap-overview { flex-direction: column; }
+  .import-name-input { flex-basis: 60%; }
+  .import-handi-input { flex-basis: 30%; }
+  .crop-wrap, .crop-frame, .crop-frame img { max-height: 50vh; }
+}

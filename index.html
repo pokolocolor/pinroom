@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="팀 핀하이 골프클럽 정모 방배정 랜덤 추첨기">
+  <meta name="theme-color" content="#18072d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="핀하이 방배정">
+  <link rel="icon" type="image/jpeg" href="pinhigh.jpg">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="apple-touch-icon-precomposed" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>핀하이 정모 방뽑기</title>
+  <link rel="stylesheet" href="style.css?v=20">
+</head>
+<body>
+
+  <div class="hero-banner">
+    <img src="assets/pinhigh-banner.jpg" alt="TEAM PINHIGH GOLF CLUB · 위례 · 잠실 · 송파 · 성남" loading="eager" fetchpriority="high">
+  </div>
+
+  <main class="app-shell">
+    <section class="hero">
+      <div class="hero-actions">
+        <button class="hero-btn" id="helpBtn" type="button">사용방법</button>
+        <button class="hero-btn" id="resetBtn" type="button"><span>↻</span>초기화</button>
+      </div>
+      <h2>스크린 골프 <em>방배정</em></h2>
+      <p>좋은사람, 좋은 샷, 좋은 하루</p>
+    </section>
+
+    <section class="card" id="roomsCard">
+      <div class="card-title"><span class="title-icon">🏌️</span><strong>방 등록</strong><span class="count" id="roomCount">0개</span></div>
+      <div class="input-row">
+        <input id="roomInput" type="tel" inputmode="numeric" pattern="[0-9]*" placeholder="방 번호 (예: 1, 2)" maxlength="4" autocomplete="off" aria-label="방 번호">
+        <button class="add-btn" id="addRoomBtn">추가</button>
+      </div>
+      <label class="toggle-row"><input id="leftRoomToggle" type="checkbox"><span class="switch"></span>좌타방으로 설정</label>
+      <div class="empty" id="roomEmpty">등록된 방이 없습니다</div>
+      <div class="chips" id="roomList"></div>
+    </section>
+
+    <section class="card" id="peopleCard">
+      <div class="card-title"><span class="title-icon">👥</span><strong>참석자 등록</strong><span class="count" id="personCount">0명</span></div>
+      <div class="input-row attendee-input-row">
+        <input id="personInput" type="text" placeholder="이름 입력" maxlength="20" autocomplete="off" enterkeyhint="next">
+        <button type="button" id="personHandicapBtn" class="handicap-picker-btn">
+          <span id="personHandicapBtnLabel">핸디</span>
+        </button>
+        <button class="add-btn" id="addPersonBtn">추가</button>
+      </div>
+      <label class="toggle-row"><input id="leftPersonToggle" type="checkbox"><span class="switch"></span>좌타로 등록</label>
+
+      <div class="ocr-import-row">
+        <input type="file" id="importImageInput" accept="image/*" style="display:none">
+        <button type="button" class="ocr-import-btn" id="importImageBtn"><span>📷</span> 캡처 이미지로 일괄 등록 (베타)</button>
+      </div>
+
+      <div class="empty" id="personEmpty">등록된 참석자가 없습니다</div>
+      <div class="chips" id="personList"></div>
+    </section>
+
+    <section class="card database-card" id="databaseCard">
+      <div class="card-title">
+        <span class="title-icon">🗂️</span>
+        <strong>참가자 데이터베이스</strong>
+        <span class="count" id="databaseCount">0명</span>
+      </div>
+      <p class="db-guide">참가자 DB에는 <b>이름, 핸디, 좌타 여부</b>가 저장되며, <b>이 기기의 브라우저</b>에 로컬로 보관됩니다. 한 번 등록한 참가자는 다음 모임에서도 목록에 남아있어 눌러서 바로 등록할 수 있습니다.</p>
+      <div class="database-list" id="databaseList"></div>
+      <div class="db-empty" id="databaseEmpty">아직 저장된 참가자가 없습니다.</div>
+      <button class="db-clear-btn" id="clearDatabaseBtn" type="button">참가자 DB 전체 삭제</button>
+    </section>
+
+    <div class="draw-btn-group">
+      <button class="draw-btn draw-btn-random" id="drawRandomBtn"><span>🎲</span> 랜덤 방배정</button>
+      <button class="draw-btn draw-btn-handicap" id="drawHandicapBtn"><span>⚖️</span> 핸디 균형 배정</button>
+    </div>
+    <p class="hint"><b>랜덤 방배정</b>은 모든 방이 반드시 <b>2명 또는 3명</b>으로 배정되며, 좌타 참석자는 좌타방에 우선 배정됩니다. <b>핸디 균형 배정</b>은 참석자 수를 방 개수로 나눠 각 방 인원이 최대한 균등(최대 1명 차이)하게 배정되며, 좌타 참석자는 좌타방에 우선 배치되고, 나머지 참석자는 핸디가 낮은 순부터 각 방에 고르게 분산되어 방별 실력 평균이 균형을 이루도록 배정합니다.</p>
+    <section class="result" id="result" aria-live="polite"></section>
+    <footer>TEAM PINHIGH GOLF CLUB · 좋은사람, 좋은 샷, 좋은 하루</footer>
+  </main>
+
+  <dialog id="helpDialog">
+    <div class="dialog-inner">
+      <button class="close" id="closeHelp" aria-label="닫기">×</button>
+      <h3>사용 방법</h3>
+      <ol>
+        <li>방 번호를 입력하면 모바일에서는 숫자 키패드가 표시됩니다.</li>
+        <li>방은 등록 후 <b>“1번 방”</b>처럼 표시되며, 좌타방으로 설정할 수 있습니다.</li>
+        <li>참석자는 이름을 입력하고 핸디 버튼을 눌러 팝업에서 값을 선택합니다(−25 ~ 40). 좌타라면 토글을 켜서 등록합니다. 핸디는 필수 선택값입니다.</li>
+        <li><b>캡처 이미지로 일괄 등록(베타)</b> 버튼을 누르면 먼저 인식할 영역을 드래그로 선택하는 화면이 나타납니다. 이름·핸디가 나열된 부분만 선택하면 인식률이 높아지며, 선택하지 않고 바로 진행해도 이미지 전체로 인식합니다. 인식이 끝나면 이름·핸디를 자동으로 추출한 확인 화면이 열려 여러 명을 한 번에 등록할 수 있습니다. 인식 결과는 등록 전에 반드시 확인·수정 화면을 거치니, 잘못 인식된 항목은 직접 고치거나 체크를 해제한 뒤 등록해주세요. 인식된 결과 화면에서 <b>🔍 인식된 원문 전체보기</b> 버튼을 누르면 잘리지 않은 전체 원문을 확인·복사할 수 있습니다.</li>
+        <li>처음 등록한 참석자는 이름·핸디 정보가 참가자 DB에 저장되어 다음 모임에서도 목록에서 바로 선택할 수 있습니다.</li>
+        <li>방배정은 <b>🎲 랜덤 방배정</b>과 <b>⚖️ 핸디 균형 배정</b> 중 원하는 버튼을 눌러 진행할 수 있습니다. 랜덤 방배정은 방 수와 참석자 수가 맞아야 하며, 모든 방에 2~3명이 배정되고 좌타 참석자는 좌타방에 우선 배정됩니다.</li>
+        <li>핸디 균형 배정은 참석자 수를 방 개수로 나눠 각 방 인원이 최대한 균등하게 배정되며, 좌타 참석자를 좌타방에 우선 배치한 뒤 나머지 참석자들을 핸디 순으로 방마다 고르게 분산시켜 방별 실력(핸디 총합/평균)이 균형을 이루도록 자동으로 배정합니다.</li>
+        <li>좌타 참석자가 있는데 좌타방이 등록되어 있지 않으면, 두 배정 방식 모두 결과 화면 상단에 안내 문구가 표시됩니다.</li>
+        <li>방 목록과 배정 결과 모두 <b>방 번호 오름차순</b>으로 표시됩니다.</li>
+      </ol>
+      <p>참가자 DB는 <b>이 브라우저(기기)</b>에만 저장됩니다. 다른 기기와는 공유되지 않으니, 항상 같은 기기에서 관리하는 것을 추천합니다.</p>
+    </div>
+  </dialog>
+
+  <dialog id="handicapDialog">
+    <div class="dialog-inner handicap-dialog-inner">
+      <button class="close" id="closeHandicapDialog" aria-label="닫기">×</button>
+      <h3>핸디 선택</h3>
+      <div class="handicap-grid" id="handicapGrid"></div>
+    </div>
+  </dialog>
+
+  <dialog id="cropDialog">
+    <div class="dialog-inner crop-dialog-inner">
+      <button class="close" id="closeCropDialog" aria-label="닫기">×</button>
+      <h3>인식할 영역 선택 (선택사항)</h3>
+      <p class="crop-guide">이름·핸디가 나열된 부분만 손가락(또는 마우스)으로 드래그해서 선택하면 인식률이 크게 좋아집니다. 선택하지 않고 아래 버튼을 누르면 이미지 전체로 인식합니다.</p>
+      <div class="crop-wrap" id="cropWrap">
+        <div class="crop-frame" id="cropFrame">
+          <img id="cropImagePreview" alt="캡처 이미지 미리보기" draggable="false">
+          <div class="crop-selection-box" id="cropSelectionBox"></div>
+        </div>
+      </div>
+      <div class="crop-actions">
+        <button type="button" class="crop-reset-btn" id="cropResetBtn">선택 초기화</button>
+        <div class="crop-actions-right">
+          <button type="button" class="crop-cancel-btn" id="cropCancelBtn">취소</button>
+          <button type="button" class="crop-confirm-btn" id="cropConfirmBtn">이 이미지로 인식 시작</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="ocrLoadingDialog">
+    <div class="dialog-inner ocr-loading-inner">
+      <div class="ocr-spinner"></div>
+      <p id="ocrLoadingText">이미지 분석 중... 0%</p>
+      <p class="ocr-loading-sub">최초 실행 시 언어 데이터 다운로드로 시간이 더 걸릴 수 있어요.</p>
+    </div>
+  </dialog>
+
+  <dialog id="importDialog">
+    <div class="dialog-inner import-dialog-inner">
+      <button class="close" id="closeImportDialog" aria-label="닫기">×</button>
+      <h3>인식 결과 확인 · 수정</h3>
+      <p class="import-guide">이미지에서 자동으로 인식한 결과입니다. 이름·핸디가 잘못 인식되었으면 직접 고쳐주세요. 좌타 여부도 다시 한 번 확인해주세요. 원치 않는 항목은 체크를 해제하면 등록되지 않습니다.</p>
+      <button type="button" class="view-raw-btn" id="viewRawTextBtn">🔍 인식된 원문 전체보기</button>
+      <div class="import-select-all-row">
+        <label class="import-select-all"><input type="checkbox" id="importSelectAll" checked> 전체 선택</label>
+        <span id="importCountLabel">0명 인식됨</span>
+      </div>
+      <div class="import-list" id="importList"></div>
+      <div class="import-actions">
+        <button type="button" class="import-cancel-btn" id="importCancelBtn">취소</button>
+        <button type="button" class="import-confirm-btn" id="importConfirmBtn">선택 항목 등록</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="rawTextDialog">
+    <div class="dialog-inner raw-text-dialog-inner">
+      <button class="close" id="closeRawTextDialog" aria-label="닫기">×</button>
+      <h3>인식된 원문 전체 (복사용)</h3>
+      <textarea id="rawTextArea" readonly></textarea>
+      <p class="raw-text-hint">위 텍스트를 길게 눌러 전체 선택 후 복사하면 그대로 붙여넣기 하실 수 있습니다.</p>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="app.js?v=20"></script>
+</body>
+</html>
