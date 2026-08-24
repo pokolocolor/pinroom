@@ -834,12 +834,16 @@ function buildTarotCardMarkup() {
   return `
     <div class="tarot-stars"></div>
     <div class="tarot-inner-border"></div>
+    <span class="tarot-corner tl">✦</span>
+    <span class="tarot-corner tr">✦</span>
+    <span class="tarot-corner bl">✦</span>
+    <span class="tarot-corner br">✦</span>
     <div class="tarot-content">
+      <div class="tarot-kicker">THE ROOM ASSIGNMENT</div>
       <div class="tarot-compass"><div class="tarot-compass-ring"><span class="tarot-compass-star">✦</span></div></div>
       <div class="tarot-meta">
-        <span class="tarot-meta-item">${esc(formatEventDate(eventInfo.date))}</span>
-        <span class="tarot-meta-dot">·</span>
-        <span class="tarot-meta-item">${esc(eventInfo.place || '장소 미정')}</span>
+        <span class="tarot-meta-item">📅 ${esc(formatEventDate(eventInfo.date))}</span>
+        <span class="tarot-meta-item">📍 ${esc(eventInfo.place || '장소 미정')}</span>
       </div>
       <h1 class="tarot-title">TEAM <em>PINHIGH</em></h1>
       <div class="tarot-subtitle">GOLF CLUB &nbsp;·&nbsp; ${esc(modeLabel(lastDrawResult.mode))}</div>
@@ -850,12 +854,18 @@ function buildTarotCardMarkup() {
         ${sortedGroups.map(g => `
           <div class="tarot-room">
             <div class="tarot-room-head">
-              <span>🏌️ ${esc(g.room.name)}번 방</span>
+              <span class="tarot-room-badge">${esc(g.room.name)}</span>
+              <span class="tarot-room-name">${esc(g.room.name)}번 방</span>
               ${g.room.left ? '<span class="tarot-left-badge">좌타방</span>' : ''}
+              <span class="tarot-room-count">${g.people.length}명</span>
             </div>
             <div class="tarot-room-people">
               ${g.people.map(p => `
-                <span class="tarot-person${p.left ? ' left' : ''}">${esc(p.name)}${p.left ? ' <i>좌타</i>' : ''} <b>H${p.handicap}</b></span>
+                <span class="tarot-person${p.left ? ' left' : ''}">
+                  <span class="tarot-person-name">${esc(p.name)}</span>
+                  ${p.left ? '<span class="tarot-left-dot">좌타</span>' : ''}
+                  <span class="tarot-person-h">H${p.handicap}</span>
+                </span>
               `).join('')}
             </div>
           </div>
@@ -898,8 +908,9 @@ async function captureTarotCard() {
     try { await document.fonts.ready; } catch {}
   }
   const target = $('tarotCard');
+  const scale = Math.min(3, Math.max(2, (window.devicePixelRatio || 1) * 2));
   return html2canvas(target, {
-    scale: 2,
+    scale,
     backgroundColor: null,
     useCORS: true
   });
@@ -926,38 +937,80 @@ async function withCardBusy(btnId, label, fn) {
   }
 }
 
-async function downloadTarotCard() {
-  const canvas = await captureTarotCard();
-  if (!canvas) return;
-  const link = document.createElement('a');
-  link.download = tarotFileName();
-  link.href = canvas.toDataURL('image/png');
-  link.click();
+function isMobileDevice() {
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 }
 
-async function shareTarotCard() {
+async function buildCardFile() {
   const canvas = await captureTarotCard();
-  if (!canvas) return;
+  if (!canvas) return null;
+  return new Promise(resolve => {
+    canvas.toBlob(blob => {
+      if (!blob) { resolve(null); return; }
+      resolve(new File([blob], tarotFileName(), { type: 'image/png' }));
+    }, 'image/png');
+  });
+}
 
-  canvas.toBlob(async blob => {
-    if (!blob) return;
-    const file = new File([blob], tarotFileName(), { type: 'image/png' });
+function openImageSaveOverlay(file) {
+  const url = URL.createObjectURL(file);
+  $('imageSaveTarget').src = url;
+  $('imageSaveOverlay').showModal();
+}
 
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file], title: 'TEAM PINHIGH 방배정 결과' });
-        return;
-      } catch (err) {
-        if (err && err.name === 'AbortError') return;
-      }
+async function saveCardToGallery() {
+  const file = await buildCardFile();
+  if (!file) {
+    alertUser('이미지를 만드는 중 문제가 발생했습니다. 다시 시도해주세요.');
+    return;
+  }
+
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: 'TEAM PINHIGH 방배정 결과' });
+      return;
+    } catch (err) {
+      if (err && err.name === 'AbortError') return;
     }
+  }
 
+  if (isMobileDevice()) {
+    openImageSaveOverlay(file);
+    toast('이미지를 길게 눌러 사진첩에 저장해주세요.');
+  } else {
     const link = document.createElement('a');
     link.download = tarotFileName();
-    link.href = URL.createObjectURL(blob);
+    link.href = URL.createObjectURL(file);
+    link.click();
+  }
+}
+
+async function shareCardToOtherApps() {
+  const file = await buildCardFile();
+  if (!file) {
+    alertUser('이미지를 만드는 중 문제가 발생했습니다. 다시 시도해주세요.');
+    return;
+  }
+
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: 'TEAM PINHIGH 방배정 결과', text: '방배정 결과를 확인해보세요!' });
+      return;
+    } catch (err) {
+      if (err && err.name === 'AbortError') return;
+    }
+  }
+
+  if (isMobileDevice()) {
+    openImageSaveOverlay(file);
+    toast('공유 기능을 지원하지 않아 이미지를 길게 눌러 저장하는 방식으로 안내합니다.');
+  } else {
+    const link = document.createElement('a');
+    link.download = tarotFileName();
+    link.href = URL.createObjectURL(file);
     link.click();
     toast('공유 기능을 지원하지 않는 환경이라 이미지로 저장했습니다.');
-  }, 'image/png');
+  }
 }
 
 // =========================================================
@@ -1503,8 +1556,9 @@ $('closeRawTextDialog').addEventListener('click', () => $('rawTextDialog').close
 
 $('makeCardBtn').addEventListener('click', openShareCardDialog);
 $('closeShareCardDialog').addEventListener('click', () => $('shareCardDialog').close());
-$('downloadCardBtn').addEventListener('click', () => withCardBusy('downloadCardBtn', '생성 중...', downloadTarotCard));
-$('shareCardBtn').addEventListener('click', () => withCardBusy('shareCardBtn', '생성 중...', shareTarotCard));
+$('saveCardBtn').addEventListener('click', () => withCardBusy('saveCardBtn', '저장 준비 중...', saveCardToGallery));
+$('shareCardBtn').addEventListener('click', () => withCardBusy('shareCardBtn', '공유 준비 중...', shareCardToOtherApps));
+$('closeImageSaveOverlay').addEventListener('click', () => $('imageSaveOverlay').close());
 
 $('helpBtn').addEventListener('click', () => $('helpDialog').showModal());
 $('closeHelp').addEventListener('click', () => $('helpDialog').close());
