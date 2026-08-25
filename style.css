@@ -1012,114 +1012,111 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
 .share-card-hint b { color: var(--text); }
 
 /* =========================================================
-   18. 배정 결과 카드 디자인
+   18. 배정 결과 카드 디자인 (테두리 제거 + 1:1.7 고정 비율)
    ========================================================= */
 .tarot-card {
   position: relative;
   width: 100%;
-  max-width: 340px;
+  max-width: 320px;
+  aspect-ratio: 1 / 1.7;
   margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  overflow: hidden;
   background: linear-gradient(160deg, #7c3aed 0%, #d6389c 45%, #f97316 100%);
-  border: 14px solid #ffffff;
   border-radius: 28px;
-  padding: 30px 20px 26px;
-  color: #ffffff;
   box-shadow: 0 16px 34px rgba(0, 0, 0, 0.45);
   font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
 }
 
-.tarot-header { text-align: center; }
+.tarot-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 26px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: #ffffff;
+  transform-origin: top center;
+}
+
+.tarot-header { text-align: center; flex: none; }
 
 .tarot-tagline {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: #ffffff;
   opacity: 0.95;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   letter-spacing: 0.3px;
 }
 
 .tarot-title {
-  font-size: 42px;
+  font-size: 30px;
   font-weight: 900;
   font-style: italic;
-  letter-spacing: 0.5px;
+  letter-spacing: -0.3px;
   color: #ffffff;
   text-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   transform: skewX(-4deg);
   line-height: 1.1;
+  white-space: nowrap;
 }
 
 .tarot-date {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
   color: #ffffff;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .tarot-summary {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
   color: #ffffff;
 }
-.tarot-mode-highlight {
-  color: #ffd94d;
-}
+.tarot-mode-highlight { color: #ffd94d; }
 
 .tarot-body {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
 }
 
 .tarot-room {
   background: #fdf3ff;
-  border-radius: 20px;
-  padding: 16px 18px;
+  border-radius: 16px;
+  padding: 12px 14px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  flex: none;
 }
 
 .tarot-room-title {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
-.tarot-room-name {
-  font-size: 22px;
-  font-weight: 800;
-  color: #d6217f;
-}
-.tarot-room-count {
-  margin-left: auto;
-  font-size: 15px;
-  font-weight: 700;
-  color: #d6217f;
-  opacity: 0.85;
-}
+.tarot-room-name { font-size: 16px; font-weight: 800; color: #d6217f; }
+.tarot-room-count { margin-left: auto; font-size: 12px; font-weight: 700; color: #d6217f; opacity: 0.85; }
 
-.tarot-room-people {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
+.tarot-room-people { display: flex; flex-wrap: wrap; gap: 6px; }
 
 .tarot-person {
-  font-size: 13.5px;
+  font-size: 12px;
   font-weight: 700;
   background: linear-gradient(135deg, #8b5cf6, #ec4899);
   border-radius: 999px;
-  padding: 7px 14px;
+  padding: 5px 11px;
   color: #ffffff;
   white-space: nowrap;
 }
-.tarot-person.left {
-  background: linear-gradient(135deg, #3b82f6, #06b6d4);
-}
+.tarot-person.left { background: linear-gradient(135deg, #3b82f6, #06b6d4); }
 
 .tarot-footer { display: none; }
 
