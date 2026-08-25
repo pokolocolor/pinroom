@@ -603,6 +603,13 @@ async function runDrawSequence(result) {
   try {
     lastDrawResult = null;
     renderResultShell(result);
+
+    // 결과 영역으로 자동 스크롤하여 애니메이션을 바로 볼 수 있게 함
+    const resultSection = $('result');
+    if (resultSection) {
+      resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
     await revealResultSequentially(result);
     lastDrawResult = result;
     makeCardBtn.disabled = false;
@@ -647,7 +654,7 @@ async function handleHandicapDraw() {
 }
 
 /* =========================================================
-   12. 배정 결과 카드 생성 / 저장 / 공유
+   12. 배정 결과 카드 생성 / 저장
    ========================================================= */
 function buildTarotCardMarkup() {
   if (!lastDrawResult) return '';
@@ -656,9 +663,10 @@ function buildTarotCardMarkup() {
 
   return `
     <div class="tarot-header">
-      <div class="tarot-date">${esc(formatEventDate(eventInfo.date))} · ${esc(eventInfo.place || '장소 미정')}</div>
+      <div class="tarot-tagline">좋은 사람, 좋은 샷, 좋은 하루</div>
       <div class="tarot-title">TEAM PINHIGH</div>
-      <div class="tarot-mode">${esc(modeLabel(lastDrawResult.mode))}</div>
+      <div class="tarot-date">${esc(formatEventDate(eventInfo.date))} • ${esc(eventInfo.place || '장소 미정')}</div>
+      <div class="tarot-summary">${totalPeople}명 • ${sortedGroups.length}개방 • ${esc(modeLabel(lastDrawResult.mode))}</div>
     </div>
     <div class="tarot-body">
       ${sortedGroups.map(g => `
@@ -709,31 +717,6 @@ async function handleSaveCard() {
     if (!(err && err.name === 'AbortError')) {
       console.error(err);
       showToast('이미지 생성에 실패했어요. 다시 시도해주세요.');
-    }
-  } finally {
-    btn.disabled = false;
-    btn.textContent = originalText;
-  }
-}
-
-async function handleShareCard() {
-  const btn = $('shareCardBtn');
-  const originalText = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = '이미지 생성 중...';
-  try {
-    const blob = await generateCardImage();
-    const file = new File([blob], `핀하이_방배정_${todayISO()}.png`, { type: 'image/png' });
-    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: '핀하이 방배정 결과', text: '핀하이 정모 방배정 결과입니다.' });
-    } else {
-      showImageForLongPressSave(blob);
-      showToast('이 브라우저는 공유가 지원되지 않아 길게 눌러 저장하는 화면으로 안내합니다.');
-    }
-  } catch (err) {
-    if (!(err && err.name === 'AbortError')) {
-      console.error(err);
-      showToast('공유에 실패했어요. 다시 시도해주세요.');
     }
   } finally {
     btn.disabled = false;
@@ -815,7 +798,6 @@ function bindEvents() {
 
   // 핸디 선택 다이얼로그
   $('personHandicapBtn').addEventListener('click', () => {
-
     $$('#handicapGrid .handicap-grid-btn').forEach(btn => {
       btn.classList.toggle('active', Number(btn.dataset.value) === selectedHandicap);
     });
@@ -928,7 +910,6 @@ function bindEvents() {
   $('importSelectAll').addEventListener('change', (e) => {
     const checked = e.target.checked;
     ocrParsedRows.forEach(r => r.selected = checked);
-
     $$('#importList .import-row-check').forEach(cb => cb.checked = checked);
   });
   $('importList').addEventListener('change', (e) => {
@@ -973,7 +954,6 @@ function bindEvents() {
   });
   $('closeShareCardDialog').addEventListener('click', () => $('shareCardDialog').close());
   $('saveCardBtn').addEventListener('click', handleSaveCard);
-  $('shareCardBtn').addEventListener('click', handleShareCard);
   $('closeImageSaveOverlay').addEventListener('click', () => {
     $('imageSaveOverlay').close();
     const img = $('imageSaveTarget');
