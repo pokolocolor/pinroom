@@ -298,12 +298,26 @@ function getCroppedImageDataURL() {
 function parseOcrLine(line) {
   const leftFlag = /좌타|left/i.test(line);
   const cleaned = line.replace(/좌타|left/gi, '').trim();
+
+  // 이름 추출: 한글 2~6자 또는 영문 2~15자
   const nameMatch = cleaned.match(/([가-힣]{2,6}|[A-Za-z]{2,15})/);
-  const numMatch = cleaned.match(/-?\d{1,2}/);
+
+  // 핸디캡 추출: 'G' 또는 'g' 바로 다음에 오는 숫자만 핸디캡으로 인식
+  // 예) G-3 -> -3 / g0 -> 0 / G 8 -> 8
+  const handiMatch = cleaned.match(/[Gg]\s*(-?\d{1,2})\b/);
+
   if (!nameMatch) return null;
+
+  let handicap = handiMatch ? parseInt(handiMatch[1], 10) : 0;
+
+  // 인식 범위(-25 ~ 40) 밖의 값이 잡히면 0으로 보정 (오인식 방지)
+  if (handicap < HANDICAP_MIN || handicap > HANDICAP_MAX) {
+    handicap = 0;
+  }
+
   return {
     name: nameMatch[1].trim(),
-    handicap: numMatch ? parseInt(numMatch[0], 10) : 0,
+    handicap,
     left: leftFlag,
     selected: true
   };
