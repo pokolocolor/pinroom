@@ -13,7 +13,7 @@
   <link rel="apple-touch-icon-precomposed" sizes="180x180" href="apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
   <title>핀하이 정모 방뽑기</title>
-  <link rel="stylesheet" href="style.css?v=24">
+  <link rel="stylesheet" href="style.css?v=25">
 </head>
 <body>
 
@@ -58,7 +58,7 @@
     </section>
 
     <section class="card" id="peopleCard">
-      <div class="card-title"><span class="title-icon">👥</span><strong>참석자 등록</strong><span class="count" id="personCount">0명</span></div>
+      <div class="card-title"><span class="title-icon">👥</span><strong>참가자 등록</strong><span class="count" id="personCount">0명</span></div>
       <div class="input-row attendee-input-row">
         <input id="personInput" type="text" placeholder="이름 입력" maxlength="20" autocomplete="off" enterkeyhint="next">
         <button type="button" id="personHandicapBtn" class="handicap-picker-btn">
@@ -73,7 +73,7 @@
         <button type="button" class="ocr-import-btn" id="importImageBtn"><span>📷</span> 캡처 이미지로 일괄 등록 (베타)</button>
       </div>
 
-      <div class="empty" id="personEmpty">등록된 참석자가 없습니다</div>
+      <div class="empty" id="personEmpty">등록된 참가자가 없습니다</div>
       <div class="chips" id="personList"></div>
     </section>
 
@@ -90,11 +90,11 @@
     </section>
 
     <div class="draw-btn-group">
-      <button class="draw-btn draw-btn-random" id="drawRandomBtn"><span>🎲</span> 랜덤 방배정</button>
-      <button class="draw-btn draw-btn-handicap" id="drawHandicapBtn"><span>⚖️</span> 핸디 균형 배정</button>
+      <button class="draw-btn draw-btn-random" id="drawRandomBtn">랜덤 방배정</button>
+      <button class="draw-btn draw-btn-handicap" id="drawHandicapBtn">핸디 균형 배정</button>
     </div>
-    <button class="make-card-btn" id="makeCardBtn" type="button" disabled><span>🎴</span> 배정 결과 카드 만들기</button>
-    <p class="hint"><b>랜덤 방배정</b>은 모든 방이 반드시 <b>2명 또는 3명</b>으로 배정되며, 좌타 참석자는 좌타방에 우선 배정됩니다. <b>핸디 균형 배정</b>은 참석자 수를 방 개수로 나눠 각 방 인원이 최대한 균등(최대 1명 차이)하게 배정되며, 좌타 참석자는 좌타방에 우선 배치되고, 나머지 참석자는 핸디가 낮은 순부터 각 방에 고르게 분산되어 방별 실력 평균이 균형을 이루도록 배정합니다. 방배정이 끝나면 <b>🎴 배정 결과 카드 만들기</b> 버튼으로 카드 이미지를 만들어 공유할 수 있습니다.</p>
+    <button class="make-card-btn" id="makeCardBtn" type="button" disabled>배정 결과 카드 만들기</button>
+    <p class="hint"><b>랜덤 방배정</b>은 모든 방이 반드시 <b>2명 또는 3명</b>으로 배정되며, 좌타 참가자는 좌타방에 우선 배정됩니다. <b>핸디 균형 배정</b>은 참가자 수를 방 개수로 나눠 각 방 인원이 최대한 균등(최대 1명 차이)하게 배정되며, 좌타 참가자는 좌타방에 우선 배치되고, 나머지 참가자는 핸디가 낮은 순부터 각 방에 고르게 분산되어 방별 실력 평균이 균형을 이루도록 배정합니다. 버튼을 누르면 방 번호 순서대로 각 방마다 약 2초간 두근두근한 애니메이션이 재생된 뒤 배정 결과가 순차적으로 공개되며, 모두 끝나면 <b>배정 결과 카드 만들기</b> 버튼으로 카드 이미지를 만들어 공유할 수 있습니다.</p>
     <section class="result" id="result" aria-live="polite"></section>
     <footer>TEAM PINHIGH GOLF CLUB · 좋은사람, 좋은 샷, 좋은 하루</footer>
   </main>
@@ -106,12 +106,12 @@
       <ol>
         <li>상단 <b>모임 정보</b>에서 날짜(달력에서 선택 또는 '오늘' 버튼)와 장소를 입력해두면, 이후 만드는 결과 카드 상단에 자동으로 표시됩니다. 장소는 참가자 DB처럼 이 기기에 자동 저장되어 다음부터는 목록에서 눌러서 바로 선택할 수 있습니다.</li>
         <li>방 번호를 입력하면 모바일에서는 숫자 키패드가 표시됩니다. 방은 등록 후 <b>“1번 방”</b>처럼 표시되며, 좌타방으로 설정할 수 있습니다.</li>
-        <li>참석자는 이름을 입력하고 핸디 버튼을 눌러 팝업에서 값을 선택합니다(−25 ~ 40). 좌타라면 토글을 켜서 등록합니다. 핸디는 필수 선택값입니다.</li>
+        <li>참가자는 이름을 입력하고 핸디 버튼을 눌러 팝업에서 값을 선택합니다(−25 ~ 40). 좌타라면 토글을 켜서 등록합니다. 핸디는 필수 선택값입니다.</li>
         <li><b>캡처 이미지로 일괄 등록(베타)</b> 버튼을 누르면 먼저 인식할 영역을 드래그로 선택하는 화면이 나타납니다. 이름·핸디가 나열된 부분만 선택하면 인식률이 높아지며, 선택하지 않고 바로 진행해도 이미지 전체로 인식합니다. 인식이 끝나면 확인·수정 화면이 열려 여러 명을 한 번에 등록할 수 있고, <b>🔍 인식된 원문 전체보기</b>로 잘리지 않은 전체 원문을 확인·복사할 수 있습니다.</li>
-        <li>처음 등록한 참석자는 이름·핸디 정보가 참가자 DB에 저장되어 다음 모임에서도 목록에서 바로 선택할 수 있습니다.</li>
-        <li>방배정은 <b>🎲 랜덤 방배정</b>과 <b>⚖️ 핸디 균형 배정</b> 중 원하는 버튼을 눌러 진행할 수 있습니다. 좌타 참석자는 좌타방에 우선 배정됩니다.</li>
-        <li>방배정이 완료되면 <b>🎴 배정 결과 카드 만들기</b> 버튼이 활성화됩니다. 카드 팝업의 <b>📥 사진첩에 저장</b> 버튼을 누르면 대부분의 기기에서 바로 사진첩(갤러리)에 저장할 수 있는 공유창이 뜨며, 지원하지 않는 기기에서는 이미지를 길게 눌러 저장하는 화면으로 안내됩니다. <b>📤 다른 앱으로 공유</b> 버튼으로는 카카오톡 등에 바로 전송할 수 있습니다.</li>
-        <li>좌타 참석자가 있는데 좌타방이 등록되어 있지 않으면, 두 배정 방식 모두 결과 화면 상단에 안내 문구가 표시됩니다.</li>
+        <li>처음 등록한 참가자는 이름·핸디 정보가 참가자 DB에 저장되어 다음 모임에서도 목록에서 바로 선택할 수 있습니다.</li>
+        <li>방배정은 <b>랜덤 방배정</b>과 <b>핸디 균형 배정</b> 중 원하는 버튼을 눌러 진행할 수 있으며, 버튼을 누르면 방 번호 순서대로 각 방마다 약 2초간 긴장감 있는 애니메이션이 재생된 후 배정 결과가 순차적으로 공개됩니다. 좌타 참가자는 좌타방에 우선 배정됩니다.</li>
+        <li>모든 방의 배정이 공개되면 <b>배정 결과 카드 만들기</b> 버튼이 활성화됩니다. 카드 팝업의 <b>📥 사진첩에 저장</b> 버튼을 누르면 대부분의 기기에서 바로 사진첩(갤러리)에 저장할 수 있는 공유창이 뜨며, 지원하지 않는 기기에서는 이미지를 길게 눌러 저장하는 화면으로 안내됩니다. <b>📤 다른 앱으로 공유</b> 버튼으로는 카카오톡 등에 바로 전송할 수 있습니다.</li>
+        <li>좌타 참가자가 있는데 좌타방이 등록되어 있지 않으면, 두 배정 방식 모두 결과 화면 상단에 안내 문구가 표시됩니다.</li>
         <li>방 목록과 배정 결과 모두 <b>방 번호 오름차순</b>으로 표시됩니다.</li>
       </ol>
       <p>참가자 DB, 장소 목록, 모임 정보는 <b>이 브라우저(기기)</b>에만 저장됩니다. 다른 기기와는 공유되지 않으니, 항상 같은 기기에서 관리하는 것을 추천합니다.</p>
@@ -209,6 +209,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="app.js?v=24"></script>
+  <script src="app.js?v=25"></script>
 </body>
 </html>
