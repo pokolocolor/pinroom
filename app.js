@@ -662,28 +662,43 @@ function buildTarotCardMarkup() {
   const totalPeople = sortedGroups.reduce((s, g) => s + g.people.length, 0);
 
   return `
-    <div class="tarot-header">
-      <div class="tarot-tagline">좋은 사람, 좋은 샷, 좋은 하루</div>
-      <div class="tarot-title">TEAM PINHIGH</div>
-      <div class="tarot-date">${esc(formatEventDate(eventInfo.date))} • ${esc(eventInfo.place || '장소 미정')}</div>
-      <div class="tarot-summary">${totalPeople}명 • ${sortedGroups.length}개방 • <span class="tarot-mode-highlight">${esc(modeLabel(lastDrawResult.mode))}</span></div>
-    </div>
-    <div class="tarot-body">
-      ${sortedGroups.map(g => `
-        <div class="tarot-room">
-          <div class="tarot-room-title">
-            <span class="tarot-room-name">${esc(g.room.name)}번 방${g.room.left ? ' · 좌타방' : ''}</span>
-            <span class="tarot-room-count">${g.people.length}명</span>
+    <div class="tarot-inner">
+      <div class="tarot-header">
+        <div class="tarot-tagline">좋은 사람, 좋은 샷, 좋은 하루</div>
+        <div class="tarot-title">TEAM PINHIGH</div>
+        <div class="tarot-date">${esc(formatEventDate(eventInfo.date))} • ${esc(eventInfo.place || '장소 미정')}</div>
+        <div class="tarot-summary">${totalPeople}명 • ${sortedGroups.length}개방 • <span class="tarot-mode-highlight">${esc(modeLabel(lastDrawResult.mode))}</span></div>
+      </div>
+      <div class="tarot-body">
+        ${sortedGroups.map(g => `
+          <div class="tarot-room">
+            <div class="tarot-room-title">
+              <span class="tarot-room-name">${esc(g.room.name)}번 방${g.room.left ? ' · 좌타방' : ''}</span>
+              <span class="tarot-room-count">${g.people.length}명</span>
+            </div>
+            <div class="tarot-room-people">
+              ${g.people.map(p => `
+                <span class="tarot-person${p.left ? ' left' : ''}">${esc(p.name)} · H${p.handicap}</span>
+              `).join('')}
+            </div>
           </div>
-          <div class="tarot-room-people">
-            ${g.people.map(p => `
-              <span class="tarot-person${p.left ? ' left' : ''}">${esc(p.name)} · H${p.handicap}</span>
-            `).join('')}
-          </div>
-        </div>
-      `).join('')}
+        `).join('')}
+      </div>
     </div>
   `;
+}
+
+function fitTarotCard() {
+  const card = $('tarotCard');
+  const inner = card.querySelector('.tarot-inner');
+  if (!inner) return;
+  inner.style.transform = 'scale(1)';
+  requestAnimationFrame(() => {
+    const availableHeight = card.clientHeight;
+    const contentHeight = inner.scrollHeight;
+    const scale = contentHeight > availableHeight ? availableHeight / contentHeight : 1;
+    inner.style.transform = `scale(${scale})`;
+  });
 }
 
 async function generateCardImage() {
@@ -797,6 +812,7 @@ function bindEvents() {
 
   // 핸디 선택 다이얼로그
   $('personHandicapBtn').addEventListener('click', () => {
+
     $$('#handicapGrid .handicap-grid-btn').forEach(btn => {
       btn.classList.toggle('active', Number(btn.dataset.value) === selectedHandicap);
     });
@@ -909,6 +925,7 @@ function bindEvents() {
   $('importSelectAll').addEventListener('change', (e) => {
     const checked = e.target.checked;
     ocrParsedRows.forEach(r => r.selected = checked);
+
     $$('#importList .import-row-check').forEach(cb => cb.checked = checked);
   });
   $('importList').addEventListener('change', (e) => {
@@ -950,6 +967,7 @@ function bindEvents() {
     if (!lastDrawResult) return;
     $('tarotCard').innerHTML = buildTarotCardMarkup();
     $('shareCardDialog').showModal();
+    fitTarotCard();
   });
   $('closeShareCardDialog').addEventListener('click', () => $('shareCardDialog').close());
   $('saveCardBtn').addEventListener('click', handleSaveCard);
