@@ -1016,8 +1016,9 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
 /* =========================================================
    18. 배정 결과 카드 디자인
    - 외곽 테두리 없음 + 1:1.7 고정 비율
-   - 방 개수에 따라 열(column) 개수가 가변: 1개→1열, 2개→2열,
-     3개→3열, 4개→2열(자동 2행=2x2), 5개 이상→3열(자동 2행 이상=2x3~)
+   - 방 개수에 맞춰 그리드의 행·열이 계산되어(app.js의 getTarotLayout) 인라인 스타일로
+     grid-template-columns / grid-template-rows 값이 채워지며, 방 카드들이 카드 내부
+     영역을 남김없이 균등하게 나눠 채운다. (1개:1x1, 2개:2x1, 3개:3x1, 4개:2x2, 5개 이상:2열 고정)
    ========================================================= */
 .tarot-card {
   position: relative;
@@ -1085,25 +1086,26 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
 }
 .tarot-mode-highlight { color: #ffd94d; }
 
+/* grid-template-columns / grid-template-rows 는 app.js에서 방 개수에 맞춰
+   인라인 스타일로 주입되며, 각 셀은 1fr 비율로 남김없이 균등하게 채워진다. */
 .tarot-body {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-auto-rows: min-content;
-  align-content: start;
   gap: 8px;
 }
-
-.tarot-body.cols-1 { grid-template-columns: 1fr; }
-.tarot-body.cols-2 { grid-template-columns: repeat(2, 1fr); }
-.tarot-body.cols-3 { grid-template-columns: repeat(3, 1fr); }
 
 .tarot-room {
   background: #fdf3ff;
   border-radius: 12px;
-  padding: 8px 9px;
+  padding: 10px 10px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
   min-width: 0;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .tarot-room-title {
@@ -1112,11 +1114,21 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
   gap: 4px;
   margin-bottom: 4px;
   flex-wrap: wrap;
+  flex: none;
 }
 .tarot-room-name { font-size: 12.5px; font-weight: 800; color: #d6217f; }
 .tarot-room-count { margin-left: auto; font-size: 10px; font-weight: 700; color: #d6217f; opacity: 0.85; }
 
-.tarot-room-people { display: flex; flex-wrap: wrap; gap: 4px; }
+/* 참가자 수가 적어도 셀 안이 비어 보이지 않도록, 남는 세로 공간에 맞춰
+   가운데로 정렬되어 채워진다. */
+.tarot-room-people {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex: 1;
+  align-content: center;
+  justify-content: center;
+}
 
 .tarot-person {
   font-size: 10px;
