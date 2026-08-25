@@ -686,17 +686,23 @@ async function handleHandicapDraw() {
 /* =========================================================
    12. 배정 결과 카드 생성 / 저장
    ========================================================= */
-function getTarotColsClass(roomCount) {
-  if (roomCount <= 1) return 'cols-1';
-  if (roomCount === 2 || roomCount === 4) return 'cols-2';
-  return 'cols-3'; // 3개(1x3) 또는 5개 이상(2x3, 그 이상은 자동으로 행이 늘어남)
+// 방 개수에 맞춰 행(row)·열(column)을 계산: 결과 카드 내부 영역을 방 개수만큼
+// 완전히 나눠 채우기 위한 값이다. (1개:1x1, 2개:2x1, 3개:3x1, 4개:2x2, 5개 이상: 2열 고정 + 행 증가)
+function getTarotLayout(roomCount) {
+  if (roomCount <= 1) return { rows: 1, cols: 1 };
+  if (roomCount === 2) return { rows: 2, cols: 1 };
+  if (roomCount === 3) return { rows: 3, cols: 1 };
+  if (roomCount === 4) return { rows: 2, cols: 2 };
+  return { rows: Math.ceil(roomCount / 2), cols: 2 };
 }
 
 function buildTarotCardMarkup() {
   if (!lastDrawResult) return '';
   const sortedGroups = [...lastDrawResult.groups].sort((a, b) => compareRooms(a.room, b.room));
   const totalPeople = sortedGroups.reduce((s, g) => s + g.people.length, 0);
-  const colsClass = getTarotColsClass(sortedGroups.length);
+  const { rows, cols } = getTarotLayout(sortedGroups.length);
+  // 마지막 줄에 방이 하나만 남는 경우(예: 5개, 7개), 그 방이 마지막 줄 전체를 채우도록 함
+  const isLastRowPartial = cols > 1 && (sortedGroups.length % cols !== 0);
 
   return `
     <div class="tarot-inner">
@@ -706,9 +712,12 @@ function buildTarotCardMarkup() {
         <div class="tarot-date">${esc(formatEventDate(eventInfo.date))} • ${esc(eventInfo.place || '장소 미정')}</div>
         <div class="tarot-summary">${totalPeople}명 • ${sortedGroups.length}개방 • <span class="tarot-mode-highlight">${esc(modeLabel(lastDrawResult.mode))}</span></div>
       </div>
-      <div class="tarot-body ${colsClass}">
-        ${sortedGroups.map(g => `
-          <div class="tarot-room">
+      <div class="tarot-body" style="grid-template-columns:repeat(${cols},1fr);grid-template-rows:repeat(${rows},1fr);">
+        ${sortedGroups.map((g, i) => {
+          const isLast = i === sortedGroups.length - 1;
+          const spanAttr = (isLastRowPartial && isLast) ? ' style="grid-column:1 / -1;"' : '';
+          return `
+          <div class="tarot-room"${spanAttr}>
             <div class="tarot-room-title">
               <span class="tarot-room-name">${esc(g.room.name)}번 방${g.room.left ? ' · 좌타방' : ''}</span>
               <span class="tarot-room-count">${g.people.length}명</span>
@@ -719,7 +728,8 @@ function buildTarotCardMarkup() {
               `).join('')}
             </div>
           </div>
-        `).join('')}
+        `;
+        }).join('')}
       </div>
     </div>
   `;
@@ -851,6 +861,7 @@ function bindEvents() {
   $('personHandicapBtn').addEventListener('click', () => {
 
 
+
     $$('#handicapGrid .handicap-grid-btn').forEach(btn => {
       btn.classList.toggle('active', Number(btn.dataset.value) === selectedHandicap);
     });
@@ -963,6 +974,7 @@ function bindEvents() {
   $('importSelectAll').addEventListener('change', (e) => {
     const checked = e.target.checked;
     ocrParsedRows.forEach(r => r.selected = checked);
+
 
 
     $$('#importList .import-row-check').forEach(cb => cb.checked = checked);
