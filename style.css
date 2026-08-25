@@ -245,6 +245,7 @@ input, textarea { font-family: inherit; }
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  min-height: 1px;
 }
 
 .chip {
@@ -939,23 +940,31 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
 }
 
 /* =========================================================
-   17. 공유 카드 다이얼로그
+   17. 공유 카드 다이얼로그 (버튼이 항상 보이도록 flex 구조로 변경)
    ========================================================= */
-#shareCardDialog { width: min(94vw, 480px); }
-.share-card-dialog-inner { max-height: 92vh; padding: 18px 14px 16px; }
+#shareCardDialog { width: min(94vw, 400px); }
+
+.share-card-dialog-inner {
+  max-height: 88vh;
+  padding: 16px 14px 14px;
+  display: flex;
+  flex-direction: column;
+}
 
 .tarot-card-scroll {
-  overflow: auto;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 14px 6px;
+  padding: 10px 4px;
   margin-bottom: 14px;
-  background: radial-gradient(circle at 50% 25%, rgba(139, 92, 246, 0.28), #0d0518 72%);
+  background: #0d0518;
   border-radius: var(--radius-sm);
 }
 
-.share-card-actions { display: flex; gap: 10px; }
+.share-card-actions { display: flex; gap: 10px; flex: none; }
 .share-download-btn, .share-share-btn {
   flex: 1;
   border: none;
@@ -969,6 +978,7 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
 .share-download-btn:disabled, .share-share-btn:disabled { opacity: 0.6; cursor: default; }
 
 .share-card-hint {
+  flex: none;
   font-size: 11px;
   color: var(--text-dim);
   margin: 10px 0 0;
@@ -978,271 +988,96 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
 .share-card-hint b { color: var(--text); }
 
 /* =========================================================
-   18. 타로카드 디자인 (모바일 최적화)
+   18. 배정 결과 카드 디자인 (심플 · 1:1.7 비율 기준)
    ========================================================= */
 .tarot-card {
   position: relative;
   width: 100%;
-  max-width: 430px;
-  flex: none;
-  border-radius: 26px;
-  background: linear-gradient(165deg, #1c0f3d 0%, #3a1568 15%, #6a1f7a 32%, #9c2a72 50%, #c73f5e 66%, #e97a34 83%, #f6c15c 100%);
-  border: 3px solid #f5d78a;
-  box-shadow: 0 0 0 1px rgba(245, 215, 138, 0.45) inset, 0 18px 44px rgba(0, 0, 0, 0.55);
-  overflow: hidden;
-  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
-  color: #fff8ec;
-}
-
-.tarot-inner-border {
-  position: absolute;
-  inset: 10px;
-  border: 1.5px solid rgba(255, 224, 168, 0.75);
-  border-radius: 19px;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.tarot-corner {
-  position: absolute;
-  font-size: 13px;
-  color: #ffe9b8;
-  opacity: 0.9;
-  z-index: 3;
-  pointer-events: none;
-}
-.tarot-corner.tl { top: 14px; left: 16px; }
-.tarot-corner.tr { top: 14px; right: 16px; }
-.tarot-corner.bl { bottom: 14px; left: 16px; }
-.tarot-corner.br { bottom: 14px; right: 16px; }
-
-.tarot-stars {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background-image:
-    radial-gradient(2px 2px at 10% 8%, #fff, transparent 60%),
-    radial-gradient(1.5px 1.5px at 22% 15%, #fff, transparent 60%),
-    radial-gradient(2px 2px at 35% 6%, #fff, transparent 60%),
-    radial-gradient(1.5px 1.5px at 48% 12%, #fff, transparent 60%),
-    radial-gradient(2px 2px at 60% 5%, #fff, transparent 60%),
-    radial-gradient(1.5px 1.5px at 72% 14%, #fff, transparent 60%),
-    radial-gradient(2px 2px at 85% 7%, #fff, transparent 60%),
-    radial-gradient(1.5px 1.5px at 92% 18%, #fff, transparent 60%),
-    radial-gradient(1.5px 1.5px at 15% 22%, #fff, transparent 60%),
-    radial-gradient(1.5px 1.5px at 78% 24%, #fff, transparent 60%),
-    radial-gradient(1.5px 1.5px at 5% 30%, #fff, transparent 60%),
-    radial-gradient(1.5px 1.5px at 95% 30%, #fff, transparent 60%);
-  opacity: 0.85;
-}
-
-.tarot-content {
-  position: relative;
-  z-index: 1;
-  padding: clamp(24px, 7vw, 32px) clamp(18px, 5.5vw, 26px) 26px;
-  text-align: center;
-}
-
-.tarot-kicker {
-  font-size: 10.5px;
-  letter-spacing: 4px;
-  color: #ffe9c8;
-  opacity: 0.8;
-  margin-bottom: 10px;
-  font-weight: 700;
-}
-
-.tarot-compass {
-  width: 58px; height: 58px;
-  margin: 0 auto 14px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 224, 168, 0.85);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: radial-gradient(circle, rgba(255, 224, 168, 0.25), transparent 70%);
-}
-.tarot-compass-ring {
-  width: 40px; height: 40px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 224, 168, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.tarot-compass-star { font-size: 19px; color: #ffe9b8; }
-
-.tarot-meta {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-.tarot-meta-item {
-  background: rgba(0, 0, 0, 0.22);
-  border: 1px solid rgba(255, 224, 168, 0.4);
-  border-radius: 999px;
-  padding: 5px 13px;
-  font-size: 12px;
-  color: #ffe9c8;
-  letter-spacing: 0.2px;
-}
-
-.tarot-title {
-  margin: 0;
-  font-size: clamp(28px, 9vw, 36px);
-  font-weight: 800;
-  letter-spacing: 1px;
-  color: #fff9ec;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
-}
-.tarot-title em {
-  font-style: normal;
-  background: linear-gradient(135deg, #ffe9b8, #ffd15c);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.tarot-subtitle {
-  font-size: clamp(11px, 3.2vw, 12.5px);
-  letter-spacing: 2.5px;
-  color: #ffe9c8;
-  margin-top: 6px;
-  opacity: 0.9;
-}
-
-.tarot-divider {
-  margin: 16px 0 10px;
-  color: rgba(255, 224, 168, 0.75);
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.tarot-divider::before, .tarot-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 224, 168, 0.7), transparent);
-}
-
-.tarot-tagline {
-  font-size: clamp(12.5px, 3.6vw, 13.5px);
-  color: #fff2da;
-  margin: 0 0 22px;
-  opacity: 0.92;
-}
-
-.tarot-rooms {
+  max-width: 340px;
+  aspect-ratio: 1 / 1.7;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  text-align: left;
-  margin-bottom: 24px;
+  justify-content: space-between;
+  gap: 16px;
+  background: linear-gradient(160deg, #241242 0%, #3b1a5c 55%, #55215f 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 22px;
+  padding: 26px 20px 20px;
+  color: #f5f1fb;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.45);
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
+}
+
+.tarot-header { text-align: center; flex: none; }
+.tarot-date {
+  font-size: 12px;
+  color: #d9c9f0;
+  opacity: 0.85;
+  margin-bottom: 6px;
+}
+.tarot-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #fff;
+  margin-bottom: 4px;
+}
+.tarot-mode {
+  font-size: 12px;
+  color: #c9b6ea;
+  letter-spacing: 1px;
+}
+
+.tarot-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .tarot-room {
-  background: rgba(20, 8, 36, 0.42);
-  border: 1px solid rgba(255, 224, 168, 0.4);
-  border-radius: 16px;
-  padding: 13px 15px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  padding: 10px 12px;
 }
-.tarot-room-head {
+.tarot-room-title {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-.tarot-room-badge {
-  flex: none;
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #ffe9b8, #f3c258);
-  color: #3a1568;
-  font-weight: 800;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-}
-.tarot-room-name {
-  font-size: clamp(14.5px, 4.2vw, 16.5px);
-  font-weight: 800;
-  color: #ffe9c8;
-}
-.tarot-room-count {
-  margin-left: auto;
-  font-size: 11.5px;
-  color: #ffe9c8;
-  opacity: 0.85;
-}
-.tarot-left-badge {
-  font-size: 10px;
-  background: rgba(147, 197, 253, 0.25);
-  color: #bfe0ff;
-  border-radius: 999px;
-  padding: 2px 8px;
-  font-weight: 700;
-  margin-left: 6px;
-}
-.tarot-room-people { display: flex; flex-wrap: wrap; gap: 7px; }
-.tarot-person {
-  display: inline-flex;
-  align-items: center;
+  align-items: baseline;
   gap: 6px;
-  font-size: clamp(13px, 3.8vw, 15px);
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 224, 168, 0.35);
-  border-radius: 999px;
-  padding: 7px 12px;
-  color: #fff8ec;
-}
-.tarot-person.left { background: rgba(147, 197, 253, 0.2); border-color: rgba(147, 197, 253, 0.45); }
-.tarot-person-name { font-weight: 650; }
-.tarot-left-dot {
-  font-size: 10px;
-  background: rgba(147, 197, 253, 0.35);
-  color: #dbeeff;
-  padding: 2px 7px;
-  border-radius: 999px;
+  font-size: 14px;
   font-weight: 700;
+  margin-bottom: 8px;
 }
-.tarot-person-h {
-  font-weight: 800;
-  color: #ffe38a;
-  font-size: 11.5px;
-  background: rgba(0, 0, 0, 0.2);
-  padding: 2px 8px;
+.tarot-room-title span {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 500;
+  color: #d9c9f0;
+}
+.tarot-room-people {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tarot-person {
+  font-size: 12.5px;
+  background: rgba(255, 255, 255, 0.14);
   border-radius: 999px;
+  padding: 5px 10px;
+  color: #fff;
+  white-space: nowrap;
 }
+.tarot-person.left { background: rgba(147, 197, 253, 0.28); }
 
 .tarot-footer {
-  padding-top: 16px;
-  border-top: 1px solid rgba(255, 224, 168, 0.35);
-}
-.tarot-sun {
-  width: 50px; height: 50px;
-  margin: 0 auto 10px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #fff6d8, #ffd15c 55%, transparent 72%);
-  position: relative;
-}
-.tarot-sun::before {
-  content: '';
-  position: absolute;
-  inset: -13px;
-  border-radius: 50%;
-  background: repeating-conic-gradient(rgba(255, 236, 190, 0.55) 0deg 2deg, transparent 2deg 16deg);
-  opacity: 0.8;
-}
-.tarot-footer-text {
+  flex: none;
+  text-align: center;
   font-size: 11px;
-  letter-spacing: 1.2px;
-  color: #ffe9c8;
-  opacity: 0.9;
+  color: #d9c9f0;
+  opacity: 0.85;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 /* =========================================================
