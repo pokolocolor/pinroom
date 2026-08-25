@@ -5,6 +5,8 @@
    ========================================================= */
 const LS_PERSON_DB = 'pinhigh_person_db_v1';
 const LS_PLACE_DB = 'pinhigh_place_db_v1';
+const LS_ROOMS = 'pinhigh_rooms_v1';
+const LS_PEOPLE = 'pinhigh_people_v1';
 const HANDICAP_MIN = -25;
 const HANDICAP_MAX = 40;
 const SHUFFLE_MS = 2000;
@@ -88,7 +90,7 @@ function showToast(msg) {
 }
 
 /* =========================================================
-   3. 로컬스토리지: 참가자 DB / 장소 DB
+   3. 로컬스토리지: 참가자 DB / 장소 DB / 방·참가자 현재 상태
    ========================================================= */
 function loadPersonDB() {
   try {
@@ -111,6 +113,30 @@ function loadPlaceDB() {
 }
 function savePlaceDB() {
   try { localStorage.setItem(LS_PLACE_DB, JSON.stringify(placeDB)); } catch (err) {}
+}
+
+// 방/참가자 현재 등록 상태: 초기화 버튼을 누르기 전까지 유지되도록 저장
+function loadRoomsState() {
+  try {
+    const raw = localStorage.getItem(LS_ROOMS);
+    rooms = raw ? JSON.parse(raw) : [];
+  } catch (err) {
+    rooms = [];
+  }
+}
+function saveRoomsState() {
+  try { localStorage.setItem(LS_ROOMS, JSON.stringify(rooms)); } catch (err) {}
+}
+function loadPeopleState() {
+  try {
+    const raw = localStorage.getItem(LS_PEOPLE);
+    people = raw ? JSON.parse(raw) : [];
+  } catch (err) {
+    people = [];
+  }
+}
+function savePeopleState() {
+  try { localStorage.setItem(LS_PEOPLE, JSON.stringify(people)); } catch (err) {}
 }
 
 function upsertPersonDB(person) {
@@ -177,6 +203,7 @@ function handleAddRoomClick() {
   if (!value) { showToast('방 번호를 입력해주세요.'); input.focus(); return; }
   if (rooms.some(r => r.name === value)) { showToast('이미 등록된 방입니다.'); return; }
   rooms.push({ id: nextId(), name: value, left: $('leftRoomToggle').checked });
+  saveRoomsState();
   invalidateResultIfNeeded();
   renderRooms();
   input.value = '';
@@ -186,6 +213,7 @@ function handleAddRoomClick() {
 
 function removeRoom(id) {
   rooms = rooms.filter(r => r.id !== id);
+  saveRoomsState();
   invalidateResultIfNeeded();
   renderRooms();
 }
@@ -206,6 +234,7 @@ function renderPeople() {
 function addPersonObject({ name, handicap, left }) {
   const person = { id: nextId(), name: String(name).trim(), handicap: Number(handicap) || 0, left: !!left };
   people.push(person);
+  savePeopleState();
   upsertPersonDB(person);
   return person;
 }
@@ -229,6 +258,7 @@ function handleAddPersonClick() {
 
 function removePerson(id) {
   people = people.filter(p => p.id !== id);
+  savePeopleState();
   invalidateResultIfNeeded();
   renderPeople();
   renderDatabase();
@@ -656,10 +686,17 @@ async function handleHandicapDraw() {
 /* =========================================================
    12. 배정 결과 카드 생성 / 저장
    ========================================================= */
+function getTarotColsClass(roomCount) {
+  if (roomCount <= 1) return 'cols-1';
+  if (roomCount === 2 || roomCount === 4) return 'cols-2';
+  return 'cols-3'; // 3개(1x3) 또는 5개 이상(2x3, 그 이상은 자동으로 행이 늘어남)
+}
+
 function buildTarotCardMarkup() {
   if (!lastDrawResult) return '';
   const sortedGroups = [...lastDrawResult.groups].sort((a, b) => compareRooms(a.room, b.room));
   const totalPeople = sortedGroups.reduce((s, g) => s + g.people.length, 0);
+  const colsClass = getTarotColsClass(sortedGroups.length);
 
   return `
     <div class="tarot-inner">
@@ -669,7 +706,7 @@ function buildTarotCardMarkup() {
         <div class="tarot-date">${esc(formatEventDate(eventInfo.date))} • ${esc(eventInfo.place || '장소 미정')}</div>
         <div class="tarot-summary">${totalPeople}명 • ${sortedGroups.length}개방 • <span class="tarot-mode-highlight">${esc(modeLabel(lastDrawResult.mode))}</span></div>
       </div>
-      <div class="tarot-body">
+      <div class="tarot-body ${colsClass}">
         ${sortedGroups.map(g => `
           <div class="tarot-room">
             <div class="tarot-room-title">
@@ -813,6 +850,7 @@ function bindEvents() {
   // 핸디 선택 다이얼로그
   $('personHandicapBtn').addEventListener('click', () => {
 
+
     $$('#handicapGrid .handicap-grid-btn').forEach(btn => {
       btn.classList.toggle('active', Number(btn.dataset.value) === selectedHandicap);
     });
@@ -926,6 +964,7 @@ function bindEvents() {
     const checked = e.target.checked;
     ocrParsedRows.forEach(r => r.selected = checked);
 
+
     $$('#importList .import-row-check').forEach(cb => cb.checked = checked);
   });
   $('importList').addEventListener('change', (e) => {
@@ -987,6 +1026,8 @@ function bindEvents() {
     rooms = [];
     people = [];
     lastDrawResult = null;
+    saveRoomsState();
+    savePeopleState();
     renderRooms();
     renderPeople();
     renderDatabase();
@@ -1003,6 +1044,8 @@ function bindEvents() {
 function init() {
   loadPersonDB();
   loadPlaceDB();
+  loadRoomsState();
+  loadPeopleState();
   buildHandicapGrid();
 
   const todayStr = todayISO();
