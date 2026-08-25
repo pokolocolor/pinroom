@@ -1009,17 +1009,7 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
   text-align: center;
   line-height: 1.6;
 }
-.share-card-hint b { color: var(--
-
-
-
-
-
-                                
-
-
-
-
+.share-card-hint b { color: var(--text); }
 
 /* =========================================================
    18. 배정 결과 카드 디자인
@@ -1034,51 +1024,33 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
   flex-direction: column;
   justify-content: space-between;
   gap: 16px;
-  background: linear-gradient(135deg, #8b5cf6, #ec4899);
-  border: 14px solid #ffffff;
+  background: linear-gradient(160deg, #241242 0%, #3b1a5c 55%, #55215f 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 22px;
-  padding: 22px 18px 18px;
-  color: #ffffff;
+  padding: 26px 20px 20px;
+  color: #f5f1fb;
   box-shadow: 0 16px 34px rgba(0, 0, 0, 0.45);
   font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
 }
 
 .tarot-header { text-align: center; flex: none; }
-
-/* 좋은 사람, 좋은 샷, 좋은 하루 (조금 작게) */
-.tarot-tagline {
-  font-size: 11px;
-  font-weight: 500;
-  color: #f3e9ff;
-  opacity: 0.9;
-  letter-spacing: 0.3px;
-  margin-bottom: 6px;
-}
-
-/* TEAM PINHIGH (크게) */
-.tarot-title {
-  font-size: 30px;
-  font-weight: 900;
-  letter-spacing: 0.5px;
-  color: #ffffff;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  margin-bottom: 6px;
-}
-
-/* 8월 26일 (수) • 골프존파크 위례중앙광장점 */
 .tarot-date {
-  font-size: 12.5px;
-  color: #f3e9ff;
-  opacity: 0.95;
+  font-size: 12px;
+  color: #d9c9f0;
+  opacity: 0.85;
+  margin-bottom: 6px;
+}
+.tarot-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #fff;
   margin-bottom: 4px;
 }
-
-/* 12명 • 4개방 • 랜덤 배정 */
 .tarot-mode {
   font-size: 12px;
-  color: #f3e9ff;
-  opacity: 0.9;
-  letter-spacing: 0.5px;
+  color: #c9b6ea;
+  letter-spacing: 1px;
 }
 
 .tarot-body {
@@ -1088,8 +1060,8 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
 }
 
 .tarot-room {
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 14px;
   padding: 10px 12px;
 }
@@ -1100,14 +1072,12 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
   font-size: 14px;
   font-weight: 700;
   margin-bottom: 8px;
-  color: #ffffff;
 }
 .tarot-room-title span {
   margin-left: auto;
   font-size: 11px;
   font-weight: 500;
-  color: #f3e9ff;
-  opacity: 0.9;
+  color: #d9c9f0;
 }
 .tarot-room-people {
   display: flex;
@@ -1116,25 +1086,23 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
 }
 .tarot-person {
   font-size: 12.5px;
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.14);
   border-radius: 999px;
   padding: 5px 10px;
-  color: #ffffff;
-  font-weight: 600;
+  color: #fff;
   white-space: nowrap;
 }
-.tarot-person.left { background: rgba(147, 197, 253, 0.4); }
+.tarot-person.left { background: rgba(147, 197, 253, 0.28); }
 
 .tarot-footer {
   flex: none;
   text-align: center;
   font-size: 11px;
-  color: #f3e9ff;
-  opacity: 0.9;
+  color: #d9c9f0;
+  opacity: 0.85;
   padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.28);
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
 }
-
 
 /* =========================================================
    19. 반응형
