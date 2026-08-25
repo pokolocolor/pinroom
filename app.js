@@ -54,7 +54,7 @@ function compareRooms(a, b) {
 }
 
 function modeLabel(mode) {
-  if (mode === 'random') return '랜덤 방배정';
+  if (mode === 'random') return '랜덤 배정';
   if (mode === 'handicap') return '핸디 균형 배정';
   return '방배정';
 }
@@ -666,24 +666,23 @@ function buildTarotCardMarkup() {
       <div class="tarot-tagline">좋은 사람, 좋은 샷, 좋은 하루</div>
       <div class="tarot-title">TEAM PINHIGH</div>
       <div class="tarot-date">${esc(formatEventDate(eventInfo.date))} • ${esc(eventInfo.place || '장소 미정')}</div>
-      <div class="tarot-summary">${totalPeople}명 • ${sortedGroups.length}개방 • ${esc(modeLabel(lastDrawResult.mode))}</div>
+      <div class="tarot-summary">${totalPeople}명 • ${sortedGroups.length}개방 • <span class="tarot-mode-highlight">${esc(modeLabel(lastDrawResult.mode))}</span></div>
     </div>
     <div class="tarot-body">
       ${sortedGroups.map(g => `
         <div class="tarot-room">
           <div class="tarot-room-title">
-            🏌️ ${esc(g.room.name)}번 방${g.room.left ? ' · 좌타방' : ''}
-            <span>${g.people.length}명</span>
+            <span class="tarot-room-name">${esc(g.room.name)}번 방${g.room.left ? ' · 좌타방' : ''}</span>
+            <span class="tarot-room-count">${g.people.length}명</span>
           </div>
           <div class="tarot-room-people">
             ${g.people.map(p => `
-              <span class="tarot-person${p.left ? ' left' : ''}">${esc(p.name)}${p.left ? ' · 좌타' : ''} · H${p.handicap}</span>
+              <span class="tarot-person${p.left ? ' left' : ''}">${esc(p.name)} · H${p.handicap}</span>
             `).join('')}
           </div>
         </div>
       `).join('')}
     </div>
-    <div class="tarot-footer">TEAM PINHIGH GOLF CLUB · ${totalPeople}명 · ${sortedGroups.length}개 방</div>
   `;
 }
 
